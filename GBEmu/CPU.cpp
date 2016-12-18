@@ -63,17 +63,15 @@ byte CPU::AddBytes(const byte & b1, const byte & b2) {
 
 word CPU::AddWords(const word & w1, const word & w2) {
 	auto result = w1 + w2;
-	if (result == 0) SetFlag(FLAG_ZERO);
-	else ResetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_SUBTRACT);
 	if ((result & 0x10000) == 0x10000) SetFlag(FLAG_CARRY);
 	else ResetFlag(FLAG_CARRY);
-	if ((((w1 & 0xFF) + (w2 & 0xFF)) & 0x100) == 0x100) SetFlag(FLAG_HALF_CARRY);
+	if ((((w1 & 0xFFF) + (w2 & 0xFFF)) & 0x1000) == 0x1000) SetFlag(FLAG_HALF_CARRY);
 	else ResetFlag(FLAG_HALF_CARRY);
 	return result;
 }
 
-byte CPU::SubtractBytes(const byte & b1, const byte & b2){
+byte CPU::SubtractBytes(const byte & b1, const byte & b2) {
 	byte result = b1 - b2;
 	if (result == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
@@ -85,15 +83,14 @@ byte CPU::SubtractBytes(const byte & b1, const byte & b2){
 	return result;
 }
 
-word CPU::SubtractWords(const word & w1, const word & w2)
-{
+word CPU::SubtractWords(const word & w1, const word & w2) {
 	word result = w1 - w2;
 	if (result == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
 	SetFlag(FLAG_SUBTRACT);
 	if (w1 < w2) SetFlag(FLAG_CARRY);
 	else ResetFlag(FLAG_CARRY);
-	if (((w1 & 0xFF) < (w2 & 0xFF))) SetFlag(FLAG_HALF_CARRY);
+	if (((w1 & 0xFFF) < (w2 & 0xFFF))) SetFlag(FLAG_HALF_CARRY);
 	else ResetFlag(FLAG_HALF_CARRY);
 	return result;
 }
@@ -479,5 +476,123 @@ int CPU::XOR_A_HLm(const byte & op_code) {
 int CPU::XOR_A_n(const byte & op_code) {
 	byte val = ReadByte();
 	registers[6] = XORBytes(registers[6], val);
+	return 8;
+}
+
+int CPU::CP_A_r(const byte & op_code) {
+	byte r_id = (op_code >> 1) & 0x7;
+	CPBytes(registers[6], registers[r_id]);
+	return 4;
+}
+
+int CPU::CP_A_HLm(const byte & op_code) {
+	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	CPBytes(registers[6], val);
+	return 8;
+}
+
+int CPU::CP_A_n(const byte & op_code) {
+	byte val = ReadByte();
+	CPBytes(registers[6], val);
+	return 8;
+}
+
+int CPU::INC_r(const byte & op_code) {
+	byte r_id = (op_code >> 3) & 0x7;
+	registers[r_id] = INCByte(registers[r_id]);
+	return 4;
+}
+
+int CPU::INC_HLm(const byte & op_code) {
+	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	MMU->WriteByte(INCByte(val), CombineRegisters(4, 5));
+	return 12;
+}
+
+int CPU::DEC_r(const byte & op_code) {
+	byte r_id = (op_code >> 3) & 0x7;
+	registers[r_id] = DECByte(registers[r_id]);
+	return 4;
+}
+
+int CPU::DEC_HLm(const byte & op_code) {
+	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	MMU->WriteByte(DECByte(val), CombineRegisters(4, 5));
+	return 12;
+}
+
+int CPU::ADD_HL_BC(const byte & op_code) {
+	word result = AddWords(CombineRegisters(4, 5), CombineRegisters(0, 1));
+	SplitIntoRegisters(result, 4, 5);
+	return 8;
+}
+
+int CPU::ADD_HL_DE(const byte & op_code) {
+	word result = AddWords(CombineRegisters(4, 5), CombineRegisters(2, 3));
+	SplitIntoRegisters(result, 4, 5);
+	return 8;
+}
+
+int CPU::ADD_HL_HL(const byte & op_code) {
+	word result = AddWords(CombineRegisters(4, 5), CombineRegisters(4, 5));
+	SplitIntoRegisters(result, 4, 5);
+	return 8;
+}
+
+int CPU::ADD_HL_SP(const byte & op_code) {
+	word result = AddWords(CombineRegisters(4, 5), SP);
+	SplitIntoRegisters(result, 4, 5);
+	return 8;
+}
+
+int CPU::ADD_SP_n(const byte & op_code) {
+	sbyte val = ReadByte();
+	word result = (int)SP + val;
+	ResetFlag(FLAG_ZERO);
+	ResetFlag(FLAG_SUBTRACT);
+	if ((result & 0xF) < (SP & 0xF)) SetFlag(FLAG_HALF_CARRY);
+	else ResetFlag(FLAG_HALF_CARRY);
+	if ((result & 0xFF) < (SP & 0xFF)) SetFlag(FLAG_CARRY);
+	else ResetFlag(FLAG_CARRY);
+	return 16;
+}
+
+int CPU::INC_BC(const byte & op_code) {
+	SplitIntoRegisters(CombineRegisters(0, 1) + 1, 0, 1);
+	return 8;
+}
+
+int CPU::INC_DE(const byte & op_code) {
+	SplitIntoRegisters(CombineRegisters(2, 3) + 1, 2, 3);
+	return 8;
+}
+
+int CPU::INC_HL(const byte & op_code) {
+	SplitIntoRegisters(CombineRegisters(4, 5) + 1, 4, 5);
+	return 8;
+}
+
+int CPU::INC_SP(const byte & op_code) {
+	SP++;
+	return 8;
+}
+
+int CPU::DEC_BC(const byte & op_code) {
+	SplitIntoRegisters(CombineRegisters(0, 1) - 1, 0, 1);
+	return 8;
+}
+
+int CPU::DEC_DE(const byte & op_code) {
+	SplitIntoRegisters(CombineRegisters(2, 3) - 1, 2, 3);
+	return 8;
+}
+
+int CPU::DEC_HL(const byte & op_code) {
+	SplitIntoRegisters(CombineRegisters(4, 5) - 1, 4, 5);
+	return 8;
+}
+
+int CPU::DEC_SP(const byte & op_code) {
+	SP--;
 	return 8;
 }
