@@ -16,6 +16,9 @@ private:
 	word PC;
 	Memory* MMU;
 
+	bool halted;
+	bool interruptsEnabled;
+
 public:
 	
 	CPU();
@@ -41,6 +44,8 @@ private:
 	void CPBytes(const byte & b1, const byte & b2);
 	byte INCByte(const byte & b);
 	byte DECByte(const byte & b);
+	byte RotateLeft(const byte & b, const byte & addCarry);
+	byte RotateRight(const byte & b, const bool & addCarry);
 
 	int LD_r_n(const byte& op_code);
 	int LD_r1_r2(const byte & op_code);
@@ -117,4 +122,36 @@ private:
 	int DEC_DE(const byte & op_code);
 	int DEC_HL(const byte & op_code);
 	int DEC_SP(const byte & op_code);
+	int SWAP_r(const byte & op_code);
+	int SWAP_HLm(const byte & op_code);
+	int DAA(const byte & op_code);
+	int CPL(const byte & op_code);
+	int CCF(const byte & op_code);
+	int SCF(const byte & op_code);
+	int NOP(const byte & op_code);
+	int HALT(const byte & op_code);
+	int DI(const byte & op_code);
+	int EI(const byte & op_code);
+	int RLCA(const byte & op_code);
+	int RLA(const byte & op_code);
+	int RRCA(const byte & op_code);
+	int RRA(const byte & op_code);
+	int RLC_r(const byte & op_code);
+	int RLC_HLm(const byte & op_code);
+	int RL_r(const byte & op_code);
+	int RL_HLm(const byte & op_code);
+	int RRC_r(const byte & op_code);
+	int RRC_HLm(const byte & op_code);
+	int RR_r(const byte & op_code);
+	int RR_HLm(const byte & op_code);
+	int SRA_r(const byte & op_code);
+	int SRA_HLm(const byte & op_code);
+	int SRL_r(const byte & op_code);
+	int SRL_HLm(const byte & op_code);
+	int BIT_b_r(const byte & op_code);
+	int BIT_b_HLm(const byte & op_code);
+	int SET_b_r(const byte & op_code);
+	int SET_b_HLm(const byte & op_code);
+	int RES_b_r(const byte & op_code);
+	int RES_b_HLm(const byte & op_code);
 };
