@@ -880,3 +880,68 @@ int CPU::RES_b_HLm(const byte & op_code) {
 	MMU->WriteByte(CombineRegisters(4, 5), val & ~(1 << b));
 	return 16;
 }
+
+int CPU::JP_nn(const byte & op_code) {
+	word addr = ReadWord();
+	PC = addr;
+	return 12;
+}
+
+int CPU::JP_NZ_nn(const byte & op_code) {
+	word addr = ReadWord();
+	if (!GetFlag(FLAG_ZERO)) PC = addr;
+	return 12;
+}
+
+int CPU::JP_Z_nn(const byte & op_code) {
+	word addr = ReadWord();
+	if (GetFlag(FLAG_ZERO)) PC = addr;
+	return 12;
+}
+
+int CPU::JP_NC_nn(const byte & op_code) {
+	word addr = ReadWord();
+	if (!GetFlag(FLAG_CARRY)) PC = addr;
+	return 12;
+}
+
+int CPU::JP_C_nn(const byte & op_code) {
+	word addr = ReadWord();
+	if (GetFlag(FLAG_CARRY)) PC = addr;
+	return 12;
+}
+
+int CPU::JP_HL(const byte & op_code) {
+	PC = CombineRegisters(4, 5);
+	return 4;
+}
+
+int CPU::JR_n(const byte & op_code) {
+	byte n = ReadByte();
+	PC += n;
+	return 8;
+}
+
+int CPU::JR_NZ_n(const byte & op_code) {
+	byte n = ReadByte();	
+	if (!GetFlag(FLAG_ZERO)) PC += n;
+	return 8;
+}
+
+int CPU::JR_Z_n(const byte & op_code) {
+	byte n = ReadByte();	
+	if (GetFlag(FLAG_ZERO)) PC += n;
+	return 8;
+}
+
+int CPU::JR_NC_n(const byte & op_code) {
+	byte n = ReadByte();	
+	if (!GetFlag(FLAG_CARRY)) PC += n;
+	return 8;
+}
+
+int CPU::JR_C_n(const byte & op_code) {
+	byte n = ReadByte();	
+	if (GetFlag(FLAG_CARRY)) PC += n;
+	return 8;
+}

@@ -154,4 +154,15 @@ private:
 	int SET_b_HLm(const byte & op_code);
 	int RES_b_r(const byte & op_code);
 	int RES_b_HLm(const byte & op_code);
+	int JP_nn(const byte & op_code);
+	int JP_NZ_nn(const byte & op_code);
+	int JP_Z_nn(const byte & op_code);
+	int JP_NC_nn(const byte & op_code);
+	int JP_C_nn(const byte & op_code);
+	int JP_HL(const byte & op_code);
+	int JR_n(const byte & op_code);
+	int JR_NZ_n(const byte & op_code);
+	int JR_Z_n(const byte & op_code);
+	int JR_NC_n(const byte & op_code);
+	int JR_C_n(const byte & op_code);
 };
