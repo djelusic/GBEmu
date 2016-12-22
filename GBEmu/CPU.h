@@ -19,6 +19,10 @@ private:
 	bool halted;
 	bool interruptsEnabled;
 
+	typedef int(CPU::*opCode)(const byte & op_code);
+	opCode opCodeMap[0xFF + 1];
+	opCode opCodeMapCB[0xFF + 1];
+
 public:
 	
 	CPU();
@@ -165,4 +169,16 @@ private:
 	int JR_Z_n(const byte & op_code);
 	int JR_NC_n(const byte & op_code);
 	int JR_C_n(const byte & op_code);
+	int CALL_nn(const byte & op_code);
+	int CALL_NZ_nn(const byte & op_code);
+	int CALL_Z_nn(const byte & op_code);
+	int CALL_NC_nn(const byte & op_code);
+	int CALL_C_nn(const byte & op_code);
+	int RST_n(const byte & op_code);
+	int RET(const byte & op_code);
+	int RET_NZ(const byte & op_code);
+	int RET_Z(const byte & op_code);
+	int RET_NC(const byte & op_code);
+	int RET_C(const byte & op_code);
+	int RETI(const byte & op_code);
 };

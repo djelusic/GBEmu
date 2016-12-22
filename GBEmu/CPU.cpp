@@ -17,6 +17,586 @@ CPU::CPU() {
 	interruptsEnabled = true;
 	
 	MMU = new Memory();
+
+	// 00
+	opCodeMap[0x00] = &CPU::NOP;
+	opCodeMap[0x01] = &CPU::LD_BC_nn;
+	opCodeMap[0x02] = &CPU::LD_BCm_A;
+	opCodeMap[0x03] = &CPU::INC_BC;
+	opCodeMap[0x04] = &CPU::INC_r;
+	opCodeMap[0x05] = &CPU::DEC_r;
+	opCodeMap[0x06] = &CPU::LD_r_n;
+	opCodeMap[0x07] = &CPU::RLCA;
+	opCodeMap[0x08] = &CPU::LD_nnm_SP;
+	opCodeMap[0x09] = &CPU::ADD_HL_BC;
+	opCodeMap[0x0A] = &CPU::LD_A_BCm;
+	opCodeMap[0x0B] = &CPU::DEC_BC;
+	opCodeMap[0x0C] = &CPU::INC_r;
+	opCodeMap[0x0D] = &CPU::DEC_r;
+	opCodeMap[0x0E] = &CPU::LD_r_n;
+	opCodeMap[0x0F] = &CPU::RRCA;
+
+	// 10
+	opCodeMap[0x10] = &CPU::HALT;
+	opCodeMap[0x11] = &CPU::LD_DE_nn;
+	opCodeMap[0x12] = &CPU::LD_DEm_A;
+	opCodeMap[0x13] = &CPU::INC_DE;
+	opCodeMap[0x14] = &CPU::INC_r;
+	opCodeMap[0x15] = &CPU::DEC_r;
+	opCodeMap[0x16] = &CPU::LD_r_n;
+	opCodeMap[0x17] = &CPU::RLA;
+	opCodeMap[0x18] = &CPU::JR_n;
+	opCodeMap[0x19] = &CPU::ADD_HL_DE;
+	opCodeMap[0x1A] = &CPU::LD_A_DEm;
+	opCodeMap[0x1B] = &CPU::DEC_DE;
+	opCodeMap[0x1C] = &CPU::INC_r;
+	opCodeMap[0x1D] = &CPU::DEC_r;
+	opCodeMap[0x1E] = &CPU::LD_r_n;
+	opCodeMap[0x1F] = &CPU::RRA;
+
+	// 20
+	opCodeMap[0x20] = &CPU::JR_C_n;
+	opCodeMap[0x21] = &CPU::LD_HL_nn;
+	opCodeMap[0x22] = &CPU::LDI_HLm_A;
+	opCodeMap[0x23] = &CPU::INC_HL;
+	opCodeMap[0x24] = &CPU::INC_r;
+	opCodeMap[0x25] = &CPU::DEC_r;
+	opCodeMap[0x26] = &CPU::LD_r_n;
+	opCodeMap[0x27] = &CPU::DAA;
+	opCodeMap[0x28] = &CPU::JR_C_n;
+	opCodeMap[0x29] = &CPU::ADD_HL_HL;
+	opCodeMap[0x2A] = &CPU::LDI_A_HLm;
+	opCodeMap[0x2B] = &CPU::DEC_HL;
+	opCodeMap[0x2C] = &CPU::INC_r;
+	opCodeMap[0x2D] = &CPU::DEC_r;
+	opCodeMap[0x2E] = &CPU::LD_r_n;
+	opCodeMap[0x2F] = &CPU::CPL;
+
+	// 30
+	opCodeMap[0x30] = &CPU::JR_C_n;
+	opCodeMap[0x31] = &CPU::LD_SP_nn;
+	opCodeMap[0x32] = &CPU::LDD_HLm_A;
+	opCodeMap[0x33] = &CPU::INC_SP;
+	opCodeMap[0x34] = &CPU::INC_HLm;
+	opCodeMap[0x35] = &CPU::DEC_HLm;
+	opCodeMap[0x36] = &CPU::LD_HLm_n;
+	opCodeMap[0x37] = &CPU::SCF;
+	opCodeMap[0x38] = &CPU::JR_C_n;
+	opCodeMap[0x39] = &CPU::ADD_HL_SP;
+	opCodeMap[0x3A] = &CPU::LDD_A_HLm;
+	opCodeMap[0x3B] = &CPU::DEC_SP;
+	opCodeMap[0x3C] = &CPU::INC_r;
+	opCodeMap[0x3D] = &CPU::DEC_r;
+	opCodeMap[0x3E] = &CPU::LD_r_n;
+	opCodeMap[0x3F] = &CPU::CCF;
+
+	// 40
+	opCodeMap[0x40] = &CPU::LD_r1_r2;
+	opCodeMap[0x41] = &CPU::LD_r1_r2;
+	opCodeMap[0x42] = &CPU::LD_r1_r2;
+	opCodeMap[0x43] = &CPU::LD_r1_r2;
+	opCodeMap[0x44] = &CPU::LD_r1_r2;
+	opCodeMap[0x45] = &CPU::LD_r1_r2;
+	opCodeMap[0x46] = &CPU::LD_r_HLm;
+	opCodeMap[0x47] = &CPU::LD_r1_r2;
+	opCodeMap[0x48] = &CPU::LD_r1_r2;
+	opCodeMap[0x49] = &CPU::LD_r1_r2;
+	opCodeMap[0x4A] = &CPU::LD_r1_r2;
+	opCodeMap[0x4B] = &CPU::LD_r1_r2;
+	opCodeMap[0x4C] = &CPU::LD_r1_r2;
+	opCodeMap[0x4D] = &CPU::LD_r1_r2;
+	opCodeMap[0x4E] = &CPU::LD_r_HLm;
+	opCodeMap[0x4F] = &CPU::LD_r1_r2;
+
+	// 50
+	opCodeMap[0x50] = &CPU::LD_r1_r2;
+	opCodeMap[0x51] = &CPU::LD_r1_r2;
+	opCodeMap[0x52] = &CPU::LD_r1_r2;
+	opCodeMap[0x53] = &CPU::LD_r1_r2;
+	opCodeMap[0x54] = &CPU::LD_r1_r2;
+	opCodeMap[0x55] = &CPU::LD_r1_r2;
+	opCodeMap[0x56] = &CPU::LD_r_HLm;
+	opCodeMap[0x57] = &CPU::LD_r1_r2;
+	opCodeMap[0x58] = &CPU::LD_r1_r2;
+	opCodeMap[0x59] = &CPU::LD_r1_r2;
+	opCodeMap[0x5A] = &CPU::LD_r1_r2;
+	opCodeMap[0x5B] = &CPU::LD_r1_r2;
+	opCodeMap[0x5C] = &CPU::LD_r1_r2;
+	opCodeMap[0x5D] = &CPU::LD_r1_r2;
+	opCodeMap[0x5E] = &CPU::LD_r_HLm;
+	opCodeMap[0x5F] = &CPU::LD_r1_r2;
+
+	// 60
+	opCodeMap[0x60] = &CPU::LD_r1_r2;
+	opCodeMap[0x61] = &CPU::LD_r1_r2;
+	opCodeMap[0x62] = &CPU::LD_r1_r2;
+	opCodeMap[0x63] = &CPU::LD_r1_r2;
+	opCodeMap[0x64] = &CPU::LD_r1_r2;
+	opCodeMap[0x65] = &CPU::LD_r1_r2;
+	opCodeMap[0x66] = &CPU::LD_r_HLm;
+	opCodeMap[0x67] = &CPU::LD_r1_r2;
+	opCodeMap[0x68] = &CPU::LD_r1_r2;
+	opCodeMap[0x69] = &CPU::LD_r1_r2;
+	opCodeMap[0x6A] = &CPU::LD_r1_r2;
+	opCodeMap[0x6B] = &CPU::LD_r1_r2;
+	opCodeMap[0x6C] = &CPU::LD_r1_r2;
+	opCodeMap[0x6D] = &CPU::LD_r1_r2;
+	opCodeMap[0x6E] = &CPU::LD_r_HLm;
+	opCodeMap[0x6F] = &CPU::LD_r1_r2;
+
+	// 70
+	opCodeMap[0x70] = &CPU::LD_HLm_r;
+	opCodeMap[0x71] = &CPU::LD_HLm_r;
+	opCodeMap[0x72] = &CPU::LD_HLm_r;
+	opCodeMap[0x73] = &CPU::LD_HLm_r;
+	opCodeMap[0x74] = &CPU::LD_HLm_r;
+	opCodeMap[0x75] = &CPU::LD_HLm_r;
+	opCodeMap[0x76] = &CPU::HALT;
+	opCodeMap[0x77] = &CPU::LD_HLm_r;
+	opCodeMap[0x78] = &CPU::LD_r1_r2;
+	opCodeMap[0x79] = &CPU::LD_r1_r2;
+	opCodeMap[0x7A] = &CPU::LD_r1_r2;
+	opCodeMap[0x7B] = &CPU::LD_r1_r2;
+	opCodeMap[0x7C] = &CPU::LD_r1_r2;
+	opCodeMap[0x7D] = &CPU::LD_r1_r2;
+	opCodeMap[0x7E] = &CPU::LD_r_HLm;
+	opCodeMap[0x7F] = &CPU::LD_r1_r2;
+
+	// 80
+	opCodeMap[0x80] = &CPU::ADD_A_r;
+	opCodeMap[0x81] = &CPU::ADD_A_r;
+	opCodeMap[0x82] = &CPU::ADD_A_r;
+	opCodeMap[0x83] = &CPU::ADD_A_r;
+	opCodeMap[0x84] = &CPU::ADD_A_r;
+	opCodeMap[0x85] = &CPU::ADD_A_r;
+	opCodeMap[0x86] = &CPU::ADD_A_HLm;
+	opCodeMap[0x87] = &CPU::ADD_A_r;
+	opCodeMap[0x88] = &CPU::ADC_A_r;
+	opCodeMap[0x89] = &CPU::ADC_A_r;
+	opCodeMap[0x8A] = &CPU::ADC_A_r;
+	opCodeMap[0x8B] = &CPU::ADC_A_r;
+	opCodeMap[0x8C] = &CPU::ADC_A_r;
+	opCodeMap[0x8D] = &CPU::ADC_A_r;
+	opCodeMap[0x8E] = &CPU::ADC_A_HLm;
+	opCodeMap[0x8F] = &CPU::ADC_A_r;
+
+	// 90
+	opCodeMap[0x90] = &CPU::SUB_A_r;
+	opCodeMap[0x91] = &CPU::SUB_A_r;
+	opCodeMap[0x92] = &CPU::SUB_A_r;
+	opCodeMap[0x93] = &CPU::SUB_A_r;
+	opCodeMap[0x94] = &CPU::SUB_A_r;
+	opCodeMap[0x95] = &CPU::SUB_A_r;
+	opCodeMap[0x96] = &CPU::SUB_A_HLm;
+	opCodeMap[0x97] = &CPU::SUB_A_r;
+	opCodeMap[0x98] = &CPU::SBC_A_r;
+	opCodeMap[0x99] = &CPU::SBC_A_r;
+	opCodeMap[0x9A] = &CPU::SBC_A_r;
+	opCodeMap[0x9B] = &CPU::SBC_A_r;
+	opCodeMap[0x9C] = &CPU::SBC_A_r;
+	opCodeMap[0x9D] = &CPU::SBC_A_r;
+	opCodeMap[0x9E] = &CPU::SBC_A_HLm;
+	opCodeMap[0x9F] = &CPU::SBC_A_r;
+
+	// A0
+	opCodeMap[0xA0] = &CPU::AND_A_r;
+	opCodeMap[0xA1] = &CPU::AND_A_r;
+	opCodeMap[0xA2] = &CPU::AND_A_r;
+	opCodeMap[0xA3] = &CPU::AND_A_r;
+	opCodeMap[0xA4] = &CPU::AND_A_r;
+	opCodeMap[0xA5] = &CPU::AND_A_r;
+	opCodeMap[0xA6] = &CPU::AND_A_HLm;
+	opCodeMap[0xA7] = &CPU::AND_A_r;
+	opCodeMap[0xA8] = &CPU::XOR_A_r;
+	opCodeMap[0xA9] = &CPU::XOR_A_r;
+	opCodeMap[0xAA] = &CPU::XOR_A_r;
+	opCodeMap[0xAB] = &CPU::XOR_A_r;
+	opCodeMap[0xAC] = &CPU::XOR_A_r;
+	opCodeMap[0xAD] = &CPU::XOR_A_r;
+	opCodeMap[0xAE] = &CPU::XOR_A_HLm;
+	opCodeMap[0xAF] = &CPU::XOR_A_r;
+
+	// B0
+	opCodeMap[0xB0] = &CPU::OR_A_r;
+	opCodeMap[0xB1] = &CPU::OR_A_r;
+	opCodeMap[0xB2] = &CPU::OR_A_r;
+	opCodeMap[0xB3] = &CPU::OR_A_r;
+	opCodeMap[0xB4] = &CPU::OR_A_r;
+	opCodeMap[0xB5] = &CPU::OR_A_r;
+	opCodeMap[0xB6] = &CPU::OR_A_HLm;
+	opCodeMap[0xB7] = &CPU::OR_A_r;
+	opCodeMap[0xB8] = &CPU::CP_A_r;
+	opCodeMap[0xB9] = &CPU::CP_A_r;
+	opCodeMap[0xBA] = &CPU::CP_A_r;
+	opCodeMap[0xBB] = &CPU::CP_A_r;
+	opCodeMap[0xBC] = &CPU::CP_A_r;
+	opCodeMap[0xBD] = &CPU::CP_A_r;
+	opCodeMap[0xBE] = &CPU::CP_A_HLm;
+	opCodeMap[0xBF] = &CPU::CP_A_r;
+
+	// C0
+	opCodeMap[0xC0] = &CPU::RET_NZ;
+	opCodeMap[0xC1] = &CPU::POP_BC;
+	opCodeMap[0xC2] = &CPU::JP_NC_nn;
+	opCodeMap[0xC3] = &CPU::JP_nn;
+	opCodeMap[0xC4] = &CPU::CALL_NZ_nn;
+	opCodeMap[0xC5] = &CPU::PUSH_BC;
+	opCodeMap[0xC6] = &CPU::ADD_A_n;
+	opCodeMap[0xC7] = &CPU::RST_n;
+	opCodeMap[0xC8] = &CPU::RET_Z;
+	opCodeMap[0xC9] = &CPU::RET;
+	opCodeMap[0xCA] = &CPU::JP_Z_nn;
+	//opCodeMap[0xCB] MAPPED TO 0xCB MAP
+	opCodeMap[0xCC] = &CPU::CALL_Z_nn;
+	opCodeMap[0xCD] = &CPU::CALL_nn;
+	opCodeMap[0xCE] = &CPU::ADC_A_n;
+	opCodeMap[0xCF] = &CPU::RST_n;
+
+	// D0
+	opCodeMap[0xD0] = &CPU::RET_NC;
+	opCodeMap[0xD1] = &CPU::POP_BC;
+	opCodeMap[0xD2] = &CPU::JP_NC_nn;
+	//opCodeMap[0xD3] UNUSED
+	opCodeMap[0xD4] = &CPU::CALL_NC_nn;
+	opCodeMap[0xD5] = &CPU::PUSH_BC;
+	opCodeMap[0xD6] = &CPU::SUB_A_n;
+	opCodeMap[0xD7] = &CPU::RST_n;
+	opCodeMap[0xD8] = &CPU::RET_C;
+	opCodeMap[0xD9] = &CPU::RETI;
+	opCodeMap[0xDA] = &CPU::JP_C_nn;
+	//opCodeMap[0xDB] UNUSED
+	opCodeMap[0xDC] = &CPU::CALL_C_nn;
+	//opCodeMap[0xDD] UNUSED
+	opCodeMap[0xDE] = &CPU::SBC_A_n;
+	opCodeMap[0xDF] = &CPU::RST_n;
+
+	// E0
+	opCodeMap[0xE0] = &CPU::LDH_nm_A;
+	opCodeMap[0xE1] = &CPU::POP_HL;
+	opCodeMap[0xE2] = &CPU::LD_Cm_A;
+	//opCodeMap[0xE3] UNUSED
+	//opCodeMap[0xE4] UNUSED
+	opCodeMap[0xE5] = &CPU::PUSH_HL;
+	opCodeMap[0xE6] = &CPU::AND_A_n;
+	opCodeMap[0xE7] = &CPU::RST_n;
+	opCodeMap[0xE8] = &CPU::ADD_SP_n;
+	opCodeMap[0xE9] = &CPU::JP_HL;
+	opCodeMap[0xEA] = &CPU::LD_nnm_A;
+	//opCodeMap[0xEB] UNUSED
+	//opCodeMap[0xEC] UNUSED
+	//opCodeMap[0xED] UNUSED
+	opCodeMap[0xEE] = &CPU::XOR_A_n;
+	opCodeMap[0xEF] = &CPU::RST_n;
+
+	// F0
+	opCodeMap[0xF0] = &CPU::LDH_A_nm;
+	opCodeMap[0xF1] = &CPU::POP_AF;
+	opCodeMap[0xF2] = &CPU::LD_A_Cm;
+	opCodeMap[0xF3] = &CPU::DI;
+	//opCodeMap[0xF4] UNUSED
+	opCodeMap[0xF5] = &CPU::PUSH_AF;
+	opCodeMap[0xF6] = &CPU::OR_A_n;
+	opCodeMap[0xF7] = &CPU::RST_n;
+	opCodeMap[0xF8] = &CPU::LDHL_SP_n;
+	opCodeMap[0xF9] = &CPU::LD_SP_HL;
+	opCodeMap[0xFA] = &CPU::LD_A_nnm;
+	opCodeMap[0xFB] = &CPU::EI;
+	//opCodeMap[0xFC] UNUSED
+	//opCodeMap[0xFD] UNUSED
+	opCodeMap[0xFE] = &CPU::CP_A_n;
+	opCodeMap[0xFF] = &CPU::RST_n;
+
+	/*
+	Z80 Command Set - CB
+	*/
+
+	// 00
+	opCodeMapCB[0x00] = &CPU::RLC_r;
+	opCodeMapCB[0x01] = &CPU::RLC_r;
+	opCodeMapCB[0x02] = &CPU::RLC_r;
+	opCodeMapCB[0x03] = &CPU::RLC_r;
+	opCodeMapCB[0x04] = &CPU::RLC_r;
+	opCodeMapCB[0x05] = &CPU::RLC_r;
+	opCodeMapCB[0x06] = &CPU::RLC_HLm;
+	opCodeMapCB[0x07] = &CPU::RLC_r;
+	opCodeMapCB[0x08] = &CPU::RRC_r;
+	opCodeMapCB[0x09] = &CPU::RRC_r;
+	opCodeMapCB[0x0A] = &CPU::RRC_r;
+	opCodeMapCB[0x0B] = &CPU::RRC_r;
+	opCodeMapCB[0x0C] = &CPU::RRC_r;
+	opCodeMapCB[0x0D] = &CPU::RRC_r;
+	opCodeMapCB[0x0E] = &CPU::RRC_HLm;
+	opCodeMapCB[0x0F] = &CPU::RRC_r;
+
+	// 10
+	opCodeMapCB[0x10] = &CPU::RL_r;
+	opCodeMapCB[0x11] = &CPU::RL_r;
+	opCodeMapCB[0x12] = &CPU::RL_r;
+	opCodeMapCB[0x13] = &CPU::RL_r;
+	opCodeMapCB[0x14] = &CPU::RL_r;
+	opCodeMapCB[0x15] = &CPU::RL_r;
+	opCodeMapCB[0x16] = &CPU::RL_HLm;
+	opCodeMapCB[0x17] = &CPU::RL_r;
+	opCodeMapCB[0x18] = &CPU::RR_r;
+	opCodeMapCB[0x19] = &CPU::RR_r;
+	opCodeMapCB[0x1A] = &CPU::RR_r;
+	opCodeMapCB[0x1B] = &CPU::RR_r;
+	opCodeMapCB[0x1C] = &CPU::RR_r;
+	opCodeMapCB[0x1D] = &CPU::RR_r;
+	opCodeMapCB[0x1E] = &CPU::RR_HLm;
+	opCodeMapCB[0x1F] = &CPU::RR_r;
+
+	// 20
+	opCodeMapCB[0x20] = &CPU::SRL_r;
+	opCodeMapCB[0x21] = &CPU::SRL_r;
+	opCodeMapCB[0x22] = &CPU::SRL_r;
+	opCodeMapCB[0x23] = &CPU::SRL_r;
+	opCodeMapCB[0x24] = &CPU::SRL_r;
+	opCodeMapCB[0x25] = &CPU::SRL_r;
+	opCodeMapCB[0x26] = &CPU::SRL_HLm;
+	opCodeMapCB[0x27] = &CPU::SRL_r;
+	opCodeMapCB[0x28] = &CPU::SRA_r;
+	opCodeMapCB[0x29] = &CPU::SRA_r;
+	opCodeMapCB[0x2A] = &CPU::SRA_r;
+	opCodeMapCB[0x2B] = &CPU::SRA_r;
+	opCodeMapCB[0x2C] = &CPU::SRA_r;
+	opCodeMapCB[0x2D] = &CPU::SRA_r;
+	opCodeMapCB[0x2E] = &CPU::SRA_HLm;
+	opCodeMapCB[0x2F] = &CPU::SRA_r;
+
+	// 30
+	opCodeMapCB[0x30] = &CPU::SWAP_r;
+	opCodeMapCB[0x31] = &CPU::SWAP_r;
+	opCodeMapCB[0x32] = &CPU::SWAP_r;
+	opCodeMapCB[0x33] = &CPU::SWAP_r;
+	opCodeMapCB[0x34] = &CPU::SWAP_r;
+	opCodeMapCB[0x35] = &CPU::SWAP_r;
+	opCodeMapCB[0x36] = &CPU::SWAP_HLm;
+	opCodeMapCB[0x37] = &CPU::SWAP_r;
+	opCodeMapCB[0x38] = &CPU::SRL_r;
+	opCodeMapCB[0x39] = &CPU::SRL_r;
+	opCodeMapCB[0x3A] = &CPU::SRL_r;
+	opCodeMapCB[0x3B] = &CPU::SRL_r;
+	opCodeMapCB[0x3C] = &CPU::SRL_r;
+	opCodeMapCB[0x3D] = &CPU::SRL_r;
+	opCodeMapCB[0x3E] = &CPU::SRL_HLm;
+	opCodeMapCB[0x3F] = &CPU::SRL_r;
+
+	// 40
+	opCodeMapCB[0x40] = &CPU::BIT_b_r;
+	opCodeMapCB[0x41] = &CPU::BIT_b_r;
+	opCodeMapCB[0x42] = &CPU::BIT_b_r;
+	opCodeMapCB[0x43] = &CPU::BIT_b_r;
+	opCodeMapCB[0x44] = &CPU::BIT_b_r;
+	opCodeMapCB[0x45] = &CPU::BIT_b_r;
+	opCodeMapCB[0x46] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x47] = &CPU::BIT_b_r;
+	opCodeMapCB[0x48] = &CPU::BIT_b_r;
+	opCodeMapCB[0x49] = &CPU::BIT_b_r;
+	opCodeMapCB[0x4A] = &CPU::BIT_b_r;
+	opCodeMapCB[0x4B] = &CPU::BIT_b_r;
+	opCodeMapCB[0x4C] = &CPU::BIT_b_r;
+	opCodeMapCB[0x4D] = &CPU::BIT_b_r;
+	opCodeMapCB[0x4E] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x4F] = &CPU::BIT_b_r;
+
+	// 50
+	opCodeMapCB[0x50] = &CPU::BIT_b_r;
+	opCodeMapCB[0x51] = &CPU::BIT_b_r;
+	opCodeMapCB[0x52] = &CPU::BIT_b_r;
+	opCodeMapCB[0x53] = &CPU::BIT_b_r;
+	opCodeMapCB[0x54] = &CPU::BIT_b_r;
+	opCodeMapCB[0x55] = &CPU::BIT_b_r;
+	opCodeMapCB[0x56] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x57] = &CPU::BIT_b_r;
+	opCodeMapCB[0x58] = &CPU::BIT_b_r;
+	opCodeMapCB[0x59] = &CPU::BIT_b_r;
+	opCodeMapCB[0x5A] = &CPU::BIT_b_r;
+	opCodeMapCB[0x5B] = &CPU::BIT_b_r;
+	opCodeMapCB[0x5C] = &CPU::BIT_b_r;
+	opCodeMapCB[0x5D] = &CPU::BIT_b_r;
+	opCodeMapCB[0x5E] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x5F] = &CPU::BIT_b_r;
+
+	// 60
+	opCodeMapCB[0x60] = &CPU::BIT_b_r;
+	opCodeMapCB[0x61] = &CPU::BIT_b_r;
+	opCodeMapCB[0x62] = &CPU::BIT_b_r;
+	opCodeMapCB[0x63] = &CPU::BIT_b_r;
+	opCodeMapCB[0x64] = &CPU::BIT_b_r;
+	opCodeMapCB[0x65] = &CPU::BIT_b_r;
+	opCodeMapCB[0x66] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x67] = &CPU::BIT_b_r;
+	opCodeMapCB[0x68] = &CPU::BIT_b_r;
+	opCodeMapCB[0x69] = &CPU::BIT_b_r;
+	opCodeMapCB[0x6A] = &CPU::BIT_b_r;
+	opCodeMapCB[0x6B] = &CPU::BIT_b_r;
+	opCodeMapCB[0x6C] = &CPU::BIT_b_r;
+	opCodeMapCB[0x6D] = &CPU::BIT_b_r;
+	opCodeMapCB[0x6E] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x6F] = &CPU::BIT_b_r;
+
+	// 70
+	opCodeMapCB[0x70] = &CPU::BIT_b_r;
+	opCodeMapCB[0x71] = &CPU::BIT_b_r;
+	opCodeMapCB[0x72] = &CPU::BIT_b_r;
+	opCodeMapCB[0x73] = &CPU::BIT_b_r;
+	opCodeMapCB[0x74] = &CPU::BIT_b_r;
+	opCodeMapCB[0x75] = &CPU::BIT_b_r;
+	opCodeMapCB[0x76] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x77] = &CPU::BIT_b_r;
+	opCodeMapCB[0x78] = &CPU::BIT_b_r;
+	opCodeMapCB[0x79] = &CPU::BIT_b_r;
+	opCodeMapCB[0x7A] = &CPU::BIT_b_r;
+	opCodeMapCB[0x7B] = &CPU::BIT_b_r;
+	opCodeMapCB[0x7C] = &CPU::BIT_b_r;
+	opCodeMapCB[0x7D] = &CPU::BIT_b_r;
+	opCodeMapCB[0x7E] = &CPU::BIT_b_HLm;
+	opCodeMapCB[0x7F] = &CPU::BIT_b_r;
+
+	// 80
+	opCodeMapCB[0x80] = &CPU::RES_b_r;
+	opCodeMapCB[0x81] = &CPU::RES_b_r;
+	opCodeMapCB[0x82] = &CPU::RES_b_r;
+	opCodeMapCB[0x83] = &CPU::RES_b_r;
+	opCodeMapCB[0x84] = &CPU::RES_b_r;
+	opCodeMapCB[0x85] = &CPU::RES_b_r;
+	opCodeMapCB[0x86] = &CPU::RES_b_HLm;
+	opCodeMapCB[0x87] = &CPU::RES_b_r;
+	opCodeMapCB[0x88] = &CPU::RES_b_r;
+	opCodeMapCB[0x89] = &CPU::RES_b_r;
+	opCodeMapCB[0x8A] = &CPU::RES_b_r;
+	opCodeMapCB[0x8B] = &CPU::RES_b_r;
+	opCodeMapCB[0x8C] = &CPU::RES_b_r;
+	opCodeMapCB[0x8D] = &CPU::RES_b_r;
+	opCodeMapCB[0x8E] = &CPU::RES_b_HLm;
+	opCodeMapCB[0x8F] = &CPU::RES_b_r;
+
+	// 90
+	opCodeMapCB[0x90] = &CPU::RES_b_r;
+	opCodeMapCB[0x91] = &CPU::RES_b_r;
+	opCodeMapCB[0x92] = &CPU::RES_b_r;
+	opCodeMapCB[0x93] = &CPU::RES_b_r;
+	opCodeMapCB[0x94] = &CPU::RES_b_r;
+	opCodeMapCB[0x95] = &CPU::RES_b_r;
+	opCodeMapCB[0x96] = &CPU::RES_b_HLm;
+	opCodeMapCB[0x97] = &CPU::RES_b_r;
+	opCodeMapCB[0x98] = &CPU::RES_b_r;
+	opCodeMapCB[0x99] = &CPU::RES_b_r;
+	opCodeMapCB[0x9A] = &CPU::RES_b_r;
+	opCodeMapCB[0x9B] = &CPU::RES_b_r;
+	opCodeMapCB[0x9C] = &CPU::RES_b_r;
+	opCodeMapCB[0x9D] = &CPU::RES_b_r;
+	opCodeMapCB[0x9E] = &CPU::RES_b_HLm;
+	opCodeMapCB[0x9F] = &CPU::RES_b_r;
+
+	// A0
+	opCodeMapCB[0xA0] = &CPU::RES_b_r;
+	opCodeMapCB[0xA1] = &CPU::RES_b_r;
+	opCodeMapCB[0xA2] = &CPU::RES_b_r;
+	opCodeMapCB[0xA3] = &CPU::RES_b_r;
+	opCodeMapCB[0xA4] = &CPU::RES_b_r;
+	opCodeMapCB[0xA5] = &CPU::RES_b_r;
+	opCodeMapCB[0xA6] = &CPU::RES_b_HLm;
+	opCodeMapCB[0xA7] = &CPU::RES_b_r;
+	opCodeMapCB[0xA8] = &CPU::RES_b_r;
+	opCodeMapCB[0xA9] = &CPU::RES_b_r;
+	opCodeMapCB[0xAA] = &CPU::RES_b_r;
+	opCodeMapCB[0xAB] = &CPU::RES_b_r;
+	opCodeMapCB[0xAC] = &CPU::RES_b_r;
+	opCodeMapCB[0xAD] = &CPU::RES_b_r;
+	opCodeMapCB[0xAE] = &CPU::RES_b_HLm;
+	opCodeMapCB[0xAF] = &CPU::RES_b_r;
+
+	// B0
+	opCodeMapCB[0xB0] = &CPU::RES_b_r;
+	opCodeMapCB[0xB1] = &CPU::RES_b_r;
+	opCodeMapCB[0xB2] = &CPU::RES_b_r;
+	opCodeMapCB[0xB3] = &CPU::RES_b_r;
+	opCodeMapCB[0xB4] = &CPU::RES_b_r;
+	opCodeMapCB[0xB5] = &CPU::RES_b_r;
+	opCodeMapCB[0xB6] = &CPU::RES_b_HLm;
+	opCodeMapCB[0xB7] = &CPU::RES_b_r;
+	opCodeMapCB[0xB8] = &CPU::RES_b_r;
+	opCodeMapCB[0xB9] = &CPU::RES_b_r;
+	opCodeMapCB[0xBA] = &CPU::RES_b_r;
+	opCodeMapCB[0xBB] = &CPU::RES_b_r;
+	opCodeMapCB[0xBC] = &CPU::RES_b_r;
+	opCodeMapCB[0xBD] = &CPU::RES_b_r;
+	opCodeMapCB[0xBE] = &CPU::RES_b_HLm;
+	opCodeMapCB[0xBF] = &CPU::RES_b_r;
+
+	// C0
+	opCodeMapCB[0xC0] = &CPU::SET_b_r;
+	opCodeMapCB[0xC1] = &CPU::SET_b_r;
+	opCodeMapCB[0xC2] = &CPU::SET_b_r;
+	opCodeMapCB[0xC3] = &CPU::SET_b_r;
+	opCodeMapCB[0xC4] = &CPU::SET_b_r;
+	opCodeMapCB[0xC5] = &CPU::SET_b_r;
+	opCodeMapCB[0xC6] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xC7] = &CPU::SET_b_r;
+	opCodeMapCB[0xC8] = &CPU::SET_b_r;
+	opCodeMapCB[0xC9] = &CPU::SET_b_r;
+	opCodeMapCB[0xCA] = &CPU::SET_b_r;
+	opCodeMapCB[0xCB] = &CPU::SET_b_r;
+	opCodeMapCB[0xCC] = &CPU::SET_b_r;
+	opCodeMapCB[0xCD] = &CPU::SET_b_r;
+	opCodeMapCB[0xCE] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xCF] = &CPU::SET_b_r;
+
+	// D0
+	opCodeMapCB[0xD0] = &CPU::SET_b_r;
+	opCodeMapCB[0xD1] = &CPU::SET_b_r;
+	opCodeMapCB[0xD2] = &CPU::SET_b_r;
+	opCodeMapCB[0xD3] = &CPU::SET_b_r;
+	opCodeMapCB[0xD4] = &CPU::SET_b_r;
+	opCodeMapCB[0xD5] = &CPU::SET_b_r;
+	opCodeMapCB[0xD6] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xD7] = &CPU::SET_b_r;
+	opCodeMapCB[0xD8] = &CPU::SET_b_r;
+	opCodeMapCB[0xD9] = &CPU::SET_b_r;
+	opCodeMapCB[0xDA] = &CPU::SET_b_r;
+	opCodeMapCB[0xDB] = &CPU::SET_b_r;
+	opCodeMapCB[0xDC] = &CPU::SET_b_r;
+	opCodeMapCB[0xDD] = &CPU::SET_b_r;
+	opCodeMapCB[0xDE] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xDF] = &CPU::SET_b_r;
+
+	// E0
+	opCodeMapCB[0xE0] = &CPU::SET_b_r;
+	opCodeMapCB[0xE1] = &CPU::SET_b_r;
+	opCodeMapCB[0xE2] = &CPU::SET_b_r;
+	opCodeMapCB[0xE3] = &CPU::SET_b_r;
+	opCodeMapCB[0xE4] = &CPU::SET_b_r;
+	opCodeMapCB[0xE5] = &CPU::SET_b_r;
+	opCodeMapCB[0xE6] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xE7] = &CPU::SET_b_r;
+	opCodeMapCB[0xE8] = &CPU::SET_b_r;
+	opCodeMapCB[0xE9] = &CPU::SET_b_r;
+	opCodeMapCB[0xEA] = &CPU::SET_b_r;
+	opCodeMapCB[0xEB] = &CPU::SET_b_r;
+	opCodeMapCB[0xEC] = &CPU::SET_b_r;
+	opCodeMapCB[0xED] = &CPU::SET_b_r;
+	opCodeMapCB[0xEE] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xEF] = &CPU::SET_b_r;
+
+	// F0
+	opCodeMapCB[0xF0] = &CPU::SET_b_r;
+	opCodeMapCB[0xF1] = &CPU::SET_b_r;
+	opCodeMapCB[0xF2] = &CPU::SET_b_r;
+	opCodeMapCB[0xF3] = &CPU::SET_b_r;
+	opCodeMapCB[0xF4] = &CPU::SET_b_r;
+	opCodeMapCB[0xF5] = &CPU::SET_b_r;
+	opCodeMapCB[0xF6] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xF7] = &CPU::SET_b_r;
+	opCodeMapCB[0xF8] = &CPU::SET_b_r;
+	opCodeMapCB[0xF9] = &CPU::SET_b_r;
+	opCodeMapCB[0xFA] = &CPU::SET_b_r;
+	opCodeMapCB[0xFB] = &CPU::SET_b_r;
+	opCodeMapCB[0xFC] = &CPU::SET_b_r;
+	opCodeMapCB[0xFD] = &CPU::SET_b_r;
+	opCodeMapCB[0xFE] = &CPU::SET_b_HLm;
+	opCodeMapCB[0xFF] = &CPU::SET_b_r;
 }
 
 word CPU::CombineRegisters(const byte & r1_id, const byte & r2_id) {
@@ -943,5 +1523,90 @@ int CPU::JR_NC_n(const byte & op_code) {
 int CPU::JR_C_n(const byte & op_code) {
 	byte n = ReadByte();	
 	if (GetFlag(FLAG_CARRY)) PC += n;
+	return 8;
+}
+
+int CPU::CALL_nn(const byte & op_code) {
+	MMU->WriteWord(SP, PC);
+	SP -= 2;
+	PC = ReadWord();
+	// TODO: 12 or 24 cycles ?
+	return 12;
+}
+
+int CPU::CALL_NZ_nn(const byte & op_code) {
+	if (!GetFlag(FLAG_ZERO)) {
+		CALL_nn(0);
+	}
+	return 12;
+}
+
+int CPU::CALL_Z_nn(const byte & op_code) {
+	if (GetFlag(FLAG_ZERO)) {
+		CALL_nn(0);
+	}
+	return 12;
+}
+
+int CPU::CALL_NC_nn(const byte & op_code) {
+	if (!GetFlag(FLAG_CARRY)) {
+		CALL_nn(0);
+	}
+	return 12;
+}
+
+int CPU::CALL_C_nn(const byte & op_code) {
+	if (GetFlag(FLAG_CARRY)) {
+		CALL_nn(0);
+	}
+	return 12;
+}
+
+int CPU::RST_n(const byte & op_code) {
+	byte n = 8 * ((op_code >> 3) & 0x7);
+	MMU->WriteWord(SP, PC);
+	SP -= 2;
+	PC = n;
+	return 32;
+}
+
+int CPU::RET(const byte & op_code) {
+	word addr = MMU->ReadWord(SP);
+	SP += 2;
+	PC = addr;
+	return 8;
+}
+
+int CPU::RET_NZ(const byte & op_code) {
+	if (!GetFlag(FLAG_ZERO)) {
+		RET(0);
+	}
+	return 8;
+}
+
+int CPU::RET_Z(const byte & op_code) {
+	if (GetFlag(FLAG_ZERO)) {
+		RET(0);
+	}
+	return 8;
+}
+
+int CPU::RET_NC(const byte & op_code) {
+	if (!GetFlag(FLAG_CARRY)) {
+		RET(0);
+	}
+	return 8;
+}
+
+int CPU::RET_C(const byte & op_code) {
+	if (GetFlag(FLAG_CARRY)) {
+		RET(0);
+	}
+	return 8;
+}
+
+int CPU::RETI(const byte & op_code) {
+	RET(0);
+	interruptsEnabled = true;
 	return 8;
 }
