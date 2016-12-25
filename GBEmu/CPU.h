@@ -25,8 +25,10 @@ private:
 
 public:
 	
-	CPU();
+	CPU(const char* rom_fname);
 	~CPU();
+
+	int Advance();
 
 private:
 
@@ -39,8 +41,10 @@ private:
 	void ResetFlag(const byte & flag);
 	
 	byte AddBytes(const byte & b1, const byte & b2);
+	void ADC(const byte & b);
 	word AddWords(const word & w1, const word & w2);
 	byte SubtractBytes(const byte & b1, const byte & b2);
+	void SBC(const byte & b);
 	word SubtractWords(const word & w1, const word & w2);
 	byte ANDBytes(const byte & b1, const byte & b2);
 	byte ORBytes(const byte & b1, const byte & b2);
@@ -48,8 +52,8 @@ private:
 	void CPBytes(const byte & b1, const byte & b2);
 	byte INCByte(const byte & b);
 	byte DECByte(const byte & b);
-	byte RotateLeft(const byte & b, const byte & addCarry);
-	byte RotateRight(const byte & b, const bool & addCarry);
+	byte RotateLeft(const byte & b, const bool & addCarry, const bool & isCB);
+	byte RotateRight(const byte & b, const bool & addCarry, const bool & isCB);
 
 	int LD_r_n(const byte& op_code);
 	int LD_r1_r2(const byte & op_code);
@@ -148,6 +152,8 @@ private:
 	int RRC_HLm(const byte & op_code);
 	int RR_r(const byte & op_code);
 	int RR_HLm(const byte & op_code);
+	int SLA_r(const byte & op_code);
+	int SLA_HLm(const byte & op_code);
 	int SRA_r(const byte & op_code);
 	int SRA_HLm(const byte & op_code);
 	int SRL_r(const byte & op_code);

@@ -22,7 +22,7 @@ private:
 	void ChangeBanks(const word& address, const byte& val);
 
 public:
-	Memory();
+	Memory(const char* rom_fname);
 	~Memory();
 	
 	byte ReadByte(const word& address);

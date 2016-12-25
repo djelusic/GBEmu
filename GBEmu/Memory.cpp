@@ -2,13 +2,16 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
+#include <iostream>
 
 void Memory::LoadCartridge(const char* fname) {
 	std::ifstream input(fname, std::ios::binary);
 	std::vector<byte> buffer((
 		std::istreambuf_iterator<char>(input)),
 		(std::istreambuf_iterator<char>()));
-	std::copy(buffer.begin(), buffer.end(), m_Cartridge);
+	int j = 0;
+	for (auto i = buffer.begin(); i != buffer.end(); i++, j++)
+		m_Cartridge[j] = (byte)*i;
 }
 
 void Memory::ToggleRAMEnabled(const word& address, const byte & val) {
@@ -43,7 +46,7 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 	}
 }
 
-Memory::Memory() {
+Memory::Memory(const char* rom_fname) {
 	m_MMU[0xFF05] = 0x00;
 	m_MMU[0xFF06] = 0x00;
 	m_MMU[0xFF07] = 0x00;
@@ -83,7 +86,7 @@ Memory::Memory() {
 	ramBankingMode = false;
 	MBCMode = 0;
 
-	LoadCartridge("test");
+	LoadCartridge(rom_fname);
 
 	byte MBCVal = m_Cartridge[0x147];
 	if (MBCVal > 0 && MBCVal <= 3) {
@@ -95,13 +98,16 @@ Memory::Memory() {
 }
 
 byte Memory::ReadByte(const word& address) {
+	if (address <= 0x3FFF) {
+		return m_Cartridge[address];
+	}
 	if (address >= 0x4000 && address <= 0x7FFF) {
 		return m_Cartridge[address + (currentROMBank - 1) * 0x4000];
 	}
 	if (address >= 0xA000 && address <= 0x9FFF) {
 		return m_CartridgeRAM[address + currentRAMBank * 0x2000];
 	}
-	return m_MMU[address];
+	return address <= 0xFFFF ? m_MMU[address] : 0;
 }
 
 word Memory::ReadWord(const word & address) {
@@ -128,11 +134,15 @@ void Memory::WriteByte(const word & address, const byte & val) {
 		// Not usable
 		return;
 	}
+	// redirect serial port to standard output
+	if (address == 0xFF02 && val == 0x81) {
+		std::cout << (char)(m_MMU[0xFF01]);
+	}
 	m_MMU[address] = val;
 }
 
 void Memory::WriteWord(const word & address, const word & val) {
-	WriteByte(address, val >> 8);
-	WriteByte(address + 1, val & 0xFF);
+	WriteByte(address, val & 0xFF);
+	WriteByte(address + 1, val >> 8);
 }
 
