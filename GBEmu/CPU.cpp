@@ -1,6 +1,6 @@
 #include "CPU.h"
 
-CPU::CPU(const char* rom_fname) {
+CPU::CPU(Memory &MMU) : MMU(MMU) {
 	registers[0] = 0x0; // B
 	registers[1] = 0x13; // C
 	registers[2] = 0x0; // D
@@ -15,8 +15,6 @@ CPU::CPU(const char* rom_fname) {
 
 	halted = false;
 	interruptsEnabled = true;
-	
-	MMU = new Memory(rom_fname);
 
 	// 00
 	opCodeMap[0x00] = &CPU::NOP;
@@ -612,6 +610,34 @@ int CPU::Advance() {
 	return cycles;
 }
 
+void CPU::RequestInterrupt(int id) {
+	MMU.WriteByte(IF, MMU.ReadByte(IF) | (1 << id));
+}
+
+void CPU::HandleInterrupts() {
+	byte requestedInterrupts = MMU.ReadByte(IF);
+	if (!interruptsEnabled || !requestedInterrupts) return;
+	byte enabledInterrupts = MMU.ReadByte(IE);
+	for (int i = 0; i < 5; i++) {
+		if (requestedInterrupts & (1 << i) && enabledInterrupts & (1 << i)) {
+			PerformInterrupt(i);
+		}
+	}
+}
+
+void CPU::PerformInterrupt(int id) {
+	interruptsEnabled = false;
+	MMU.WriteByte(IF, (MMU.ReadByte(IF) & ~(1 << id)));
+	SP -= 2;
+	MMU.WriteWord(SP, PC);
+	switch(id) {
+		case 0: PC = 0x40; break;
+		case 1: PC = 0x48; break;
+		case 2: PC = 0x50; break;
+		case 4: PC = 0x60; break;
+	}
+}
+
 word CPU::CombineRegisters(const byte & r1_id, const byte & r2_id) {
 	return (registers[r1_id] << 8) | registers[r2_id];
 }
@@ -622,13 +648,13 @@ void CPU::SplitIntoRegisters(const word & val, const byte & r1_id, const byte & 
 }
 
 byte CPU::ReadByte() {
-	byte ret = MMU->ReadByte(PC);
+	byte ret = MMU.ReadByte(PC);
 	PC++;
 	return ret;
 }
 
 word CPU::ReadWord() {
-	word ret = MMU->ReadWord(PC);
+	word ret = MMU.ReadWord(PC);
 	PC += 2;
 	return ret;
 }
@@ -761,7 +787,7 @@ byte CPU::INCByte(const byte & b) {
 	if (result == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_SUBTRACT);
-	if ((b & 0xF) + 1 > 0xF) SetFlag(FLAG_HALF_CARRY);
+	if ((result & 0xF) == 0) SetFlag(FLAG_HALF_CARRY);
 	else ResetFlag(FLAG_HALF_CARRY);
 	return result;
 }
@@ -771,7 +797,7 @@ byte CPU::DECByte(const byte & b) {
 	if (result == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
 	SetFlag(FLAG_SUBTRACT);
-	if ((b & 0xF) == 0) SetFlag(FLAG_HALF_CARRY);
+	if ((result & 0xF) == 0) SetFlag(FLAG_HALF_CARRY);
 	else ResetFlag(FLAG_HALF_CARRY);
 	return result;
 }
@@ -819,96 +845,96 @@ int CPU::LD_r1_r2(const byte & op_code) {
 
 int CPU::LD_r_HLm(const byte & op_code) {
 	byte r_id = (op_code >> 3) & 0x7;
-	registers[r_id] = MMU->ReadByte(CombineRegisters(4, 5));
+	registers[r_id] = MMU.ReadByte(CombineRegisters(4, 5));
 	return 8;
 }
 
 int CPU::LD_HLm_r(const byte & op_code) {
 	byte r_id = op_code & 0x7;
-	MMU->WriteByte(CombineRegisters(4, 5), registers[r_id]);
+	MMU.WriteByte(CombineRegisters(4, 5), registers[r_id]);
 	return 8;
 }
 
 int CPU::LD_HLm_n(const byte & op_code) {
-	MMU->WriteByte(CombineRegisters(4, 5), ReadByte());
+	MMU.WriteByte(CombineRegisters(4, 5), ReadByte());
 	return 12;
 }
 
 int CPU::LD_A_BCm(const byte & op_code) {
-	registers[7] = MMU->ReadByte(CombineRegisters(0, 1));
+	registers[7] = MMU.ReadByte(CombineRegisters(0, 1));
 	return 8;
 }
 
 int CPU::LD_A_DEm(const byte & op_code) {
-	registers[7] = MMU->ReadByte(CombineRegisters(2, 3));
+	registers[7] = MMU.ReadByte(CombineRegisters(2, 3));
 	return 8;
 }
 
 int CPU::LD_A_nnm(const byte & op_code) {
-	registers[7] = MMU->ReadByte(ReadWord());
+	registers[7] = MMU.ReadByte(ReadWord());
 	return 16;
 }
 
 int CPU::LD_BCm_A(const byte & op_code) {
-	MMU->WriteByte(CombineRegisters(0, 1), registers[7]);
+	MMU.WriteByte(CombineRegisters(0, 1), registers[7]);
 	return 8;
 }
 
 int CPU::LD_DEm_A(const byte & op_code) {
-	MMU->WriteByte(CombineRegisters(2, 3), registers[7]);
+	MMU.WriteByte(CombineRegisters(2, 3), registers[7]);
 	return 8;
 }
 
 int CPU::LD_nnm_A(const byte & op_code) {
-	MMU->WriteByte(ReadWord(), registers[7]);
+	MMU.WriteByte(ReadWord(), registers[7]);
 	return 16;
 }
 
 int CPU::LD_A_Cm(const byte & op_code) {
-	registers[7] = MMU->ReadByte(0xFF00 + registers[1]);
+	registers[7] = MMU.ReadByte(0xFF00 + registers[1]);
 	return 8;
 }
 
 int CPU::LD_Cm_A(const byte & op_code) {
-	MMU->WriteByte(0xFF00 + registers[1], registers[7]);
+	MMU.WriteByte(0xFF00 + registers[1], registers[7]);
 	return 8;
 }
 
 int CPU::LDD_A_HLm(const byte & op_code) {
 	word HL = CombineRegisters(4, 5);
-	registers[7] = MMU->ReadByte(HL);
+	registers[7] = MMU.ReadByte(HL);
 	SplitIntoRegisters(HL - 1, 4, 5);
 	return 8;
 }
 
 int CPU::LDD_HLm_A(const byte & op_code) {
 	word HL = CombineRegisters(4, 5);
-	MMU->WriteByte(HL, registers[7]);
+	MMU.WriteByte(HL, registers[7]);
 	SplitIntoRegisters(HL - 1, 4, 5);
 	return 8;
 }
 
 int CPU::LDI_A_HLm(const byte & op_code) {
 	word HL = CombineRegisters(4, 5);
-	registers[7] = MMU->ReadByte(HL);
+	registers[7] = MMU.ReadByte(HL);
 	SplitIntoRegisters(HL + 1, 4, 5);
 	return 8;
 }
 
 int CPU::LDI_HLm_A(const byte & op_code) {
 	word HL = CombineRegisters(4, 5);
-	MMU->WriteByte(HL, registers[7]);
+	MMU.WriteByte(HL, registers[7]);
 	SplitIntoRegisters(HL + 1, 4, 5);
 	return 8;
 }
 
 int CPU::LDH_nm_A(const byte & op_code) {
-	MMU->WriteByte(0xFF00 + ReadByte(), registers[7]);
+	MMU.WriteByte(0xFF00 + ReadByte(), registers[7]);
 	return 12;
 }
 
 int CPU::LDH_A_nm(const byte & op_code) {
-	registers[7] = MMU->ReadByte(0xFF00 + ReadByte());
+	registers[7] = MMU.ReadByte(0xFF00 + ReadByte());
 	return 12;
 }
 
@@ -955,37 +981,37 @@ int CPU::LDHL_SP_n(const byte & op_code) {
 
 int CPU::LD_nnm_SP(const byte & op_code) {
 	word addr = ReadWord();
-	MMU->WriteWord(addr, SP);
+	MMU.WriteWord(addr, SP);
 	return 20;
 }
 
 int CPU::PUSH_AF(const byte & op_code) {
-	MMU->WriteByte(--SP, registers[7]);
-	MMU->WriteByte(--SP, registers[6]);
+	MMU.WriteByte(--SP, registers[7]);
+	MMU.WriteByte(--SP, registers[6]);
 	return 16;
 }
 
 int CPU::PUSH_BC(const byte & op_code) {
-	MMU->WriteByte(--SP, registers[0]);
-	MMU->WriteByte(--SP, registers[1]);
+	MMU.WriteByte(--SP, registers[0]);
+	MMU.WriteByte(--SP, registers[1]);
 	return 16;
 }
 
 int CPU::PUSH_DE(const byte & op_code) {
-	MMU->WriteByte(--SP, registers[2]);
-	MMU->WriteByte(--SP, registers[3]);
+	MMU.WriteByte(--SP, registers[2]);
+	MMU.WriteByte(--SP, registers[3]);
 	return 16;
 }
 
 int CPU::PUSH_HL(const byte & op_code) {
-	MMU->WriteByte(--SP, registers[4]);
-	MMU->WriteByte(--SP, registers[5]);
+	MMU.WriteByte(--SP, registers[4]);
+	MMU.WriteByte(--SP, registers[5]);
 	return 16;
 }
 
 int CPU::POP_AF(const byte & op_code) {
-	registers[6] = MMU->ReadByte(SP++);
-	registers[7] = MMU->ReadByte(SP++);
+	registers[6] = MMU.ReadByte(SP++);
+	registers[7] = MMU.ReadByte(SP++);
 	// Set the lower 4 bits of F to 0, blargg's tests seem
 	// to care about this.
 	registers[6] &= 0xF0;
@@ -993,20 +1019,20 @@ int CPU::POP_AF(const byte & op_code) {
 }
 
 int CPU::POP_BC(const byte & op_code) {
-	registers[1] = MMU->ReadByte(SP++);
-	registers[0] = MMU->ReadByte(SP++);
+	registers[1] = MMU.ReadByte(SP++);
+	registers[0] = MMU.ReadByte(SP++);
 	return 12;
 }
 
 int CPU::POP_DE(const byte & op_code) {
-	registers[3] = MMU->ReadByte(SP++);
-	registers[2] = MMU->ReadByte(SP++);
+	registers[3] = MMU.ReadByte(SP++);
+	registers[2] = MMU.ReadByte(SP++);
 	return 12;
 }
 
 int CPU::POP_HL(const byte & op_code) {
-	registers[5] = MMU->ReadByte(SP++);
-	registers[4] = MMU->ReadByte(SP++);
+	registers[5] = MMU.ReadByte(SP++);
+	registers[4] = MMU.ReadByte(SP++);
 	return 12;
 }
 
@@ -1017,7 +1043,7 @@ int CPU::ADD_A_r(const byte & op_code) {
 }
 
 int CPU::ADD_A_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	registers[7] = AddBytes(registers[7], val);
 	return 8;
 }
@@ -1035,7 +1061,7 @@ int CPU::ADC_A_r(const byte & op_code) {
 }
 
 int CPU::ADC_A_HLm(const byte & op_code) {
-	ADC(MMU->ReadByte(CombineRegisters(4, 5)));
+	ADC(MMU.ReadByte(CombineRegisters(4, 5)));
 	return 8;
 }
 
@@ -1051,7 +1077,7 @@ int CPU::SUB_A_r(const byte & op_code) {
 }
 
 int CPU::SUB_A_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	registers[7] = SubtractBytes(registers[7], val);
 	return 8;
 }
@@ -1069,7 +1095,7 @@ int CPU::SBC_A_r(const byte & op_code) {
 }
 
 int CPU::SBC_A_HLm(const byte & op_code) {
-	SBC(MMU->ReadByte(CombineRegisters(4, 5)));
+	SBC(MMU.ReadByte(CombineRegisters(4, 5)));
 	return 8;
 }
 
@@ -1085,7 +1111,7 @@ int CPU::AND_A_r(const byte & op_code) {
 }
 
 int CPU::AND_A_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	registers[7] = ANDBytes(registers[7], val);
 	return 8;
 }
@@ -1103,7 +1129,7 @@ int CPU::OR_A_r(const byte & op_code) {
 }
 
 int CPU::OR_A_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	registers[7] = ORBytes(registers[7], val);
 	return 8;
 }
@@ -1121,7 +1147,7 @@ int CPU::XOR_A_r(const byte & op_code) {
 }
 
 int CPU::XOR_A_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	registers[7] = XORBytes(registers[7], val);
 	return 8;
 }
@@ -1139,7 +1165,7 @@ int CPU::CP_A_r(const byte & op_code) {
 }
 
 int CPU::CP_A_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	CPBytes(registers[7], val);
 	return 8;
 }
@@ -1157,8 +1183,8 @@ int CPU::INC_r(const byte & op_code) {
 }
 
 int CPU::INC_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(INCByte(val), CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(INCByte(val), CombineRegisters(4, 5));
 	return 12;
 }
 
@@ -1169,8 +1195,8 @@ int CPU::DEC_r(const byte & op_code) {
 }
 
 int CPU::DEC_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(DECByte(val), CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(DECByte(val), CombineRegisters(4, 5));
 	return 12;
 }
 
@@ -1265,10 +1291,10 @@ int CPU::SWAP_r(const byte & op_code) {
 }
 
 int CPU::SWAP_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	byte lower = val & 0xF;
 	byte upper = val & 0xF0;
-	MMU->WriteByte(CombineRegisters(4, 5), (lower << 4) | (upper >> 4));
+	MMU.WriteByte(CombineRegisters(4, 5), (lower << 4) | (upper >> 4));
 	if (val == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_CARRY);
@@ -1364,8 +1390,8 @@ int CPU::RLC_r(const byte & op_code) {
 }
 
 int CPU::RLC_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(CombineRegisters(4, 5), RotateLeft(val, false, true));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), RotateLeft(val, false, true));
 	return 16;
 }
 
@@ -1376,8 +1402,8 @@ int CPU::RL_r(const byte & op_code) {
 }
 
 int CPU::RL_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(CombineRegisters(4, 5), RotateLeft(val, true, true));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), RotateLeft(val, true, true));
 	return 16;
 }
 
@@ -1388,8 +1414,8 @@ int CPU::RRC_r(const byte & op_code) {
 }
 
 int CPU::RRC_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(CombineRegisters(4, 5), RotateRight(val, false, true));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), RotateRight(val, false, true));
 	return 16;
 }
 int CPU::RR_r(const byte & op_code) {
@@ -1399,8 +1425,8 @@ int CPU::RR_r(const byte & op_code) {
 }
 
 int CPU::RR_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(CombineRegisters(4, 5), RotateRight(val, true, true));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), RotateRight(val, true, true));
 	return 16;
 }
 
@@ -1418,7 +1444,7 @@ int CPU::SLA_r(const byte & op_code) {
 }
 
 int CPU::SLA_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	byte result = (val << 1);
 	if (val & 0x80) SetFlag(FLAG_CARRY);
 	else ResetFlag(FLAG_CARRY);
@@ -1426,7 +1452,7 @@ int CPU::SLA_HLm(const byte & op_code) {
 	else ResetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_HALF_CARRY);
 	ResetFlag(FLAG_SUBTRACT);
-	MMU->WriteByte(CombineRegisters(4, 5), val);
+	MMU.WriteByte(CombineRegisters(4, 5), result);
 	return 16;
 }
 
@@ -1444,7 +1470,7 @@ int CPU::SRA_r(const byte & op_code) {
 }
 
 int CPU::SRA_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	byte result = (val >> 1) | (val & 0x80);
 	if (val & 1) SetFlag(FLAG_CARRY);
 	else ResetFlag(FLAG_CARRY);
@@ -1452,7 +1478,7 @@ int CPU::SRA_HLm(const byte & op_code) {
 	else ResetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_HALF_CARRY);
 	ResetFlag(FLAG_SUBTRACT);
-	MMU->WriteByte(CombineRegisters(4, 5), val);
+	MMU.WriteByte(CombineRegisters(4, 5), result);
 	return 16;
 }
 
@@ -1470,7 +1496,7 @@ int CPU::SRL_r(const byte & op_code) {
 }
 
 int CPU::SRL_HLm(const byte & op_code) {
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	byte result = (val >> 1) & 0x7F;
 	if (val & 1) SetFlag(FLAG_CARRY);
 	else ResetFlag(FLAG_CARRY);
@@ -1478,7 +1504,7 @@ int CPU::SRL_HLm(const byte & op_code) {
 	else ResetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_HALF_CARRY);
 	ResetFlag(FLAG_SUBTRACT);
-	MMU->WriteByte(CombineRegisters(4, 5), val);
+	MMU.WriteByte(CombineRegisters(4, 5), result);
 	return 16;
 }
 
@@ -1494,11 +1520,11 @@ int CPU::BIT_b_r(const byte & op_code) {
 
 int CPU::BIT_b_HLm(const byte & op_code) {
 	byte b = (op_code >> 3) & 0x7;
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
 	if (val & (1 << b)) ResetFlag(FLAG_ZERO);
 	else SetFlag(FLAG_ZERO);
 	ResetFlag(FLAG_SUBTRACT);
-	ResetFlag(FLAG_HALF_CARRY);
+	SetFlag(FLAG_HALF_CARRY);
 	return 16;
 }
 
@@ -1511,8 +1537,8 @@ int CPU::SET_b_r(const byte & op_code) {
 
 int CPU::SET_b_HLm(const byte & op_code) {
 	byte b = (op_code >> 3) & 0x7;
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(CombineRegisters(4, 5), val | (1 << b));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), val | (1 << b));
 	return 16;
 }
 
@@ -1525,8 +1551,8 @@ int CPU::RES_b_r(const byte & op_code) {
 
 int CPU::RES_b_HLm(const byte & op_code) {
 	byte b = (op_code >> 3) & 0x7;
-	byte val = MMU->ReadByte(CombineRegisters(4, 5));
-	MMU->WriteByte(CombineRegisters(4, 5), val & ~(1 << b));
+	byte val = MMU.ReadByte(CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), val & ~(1 << b));
 	return 16;
 }
 
@@ -1598,7 +1624,7 @@ int CPU::JR_C_n(const byte & op_code) {
 int CPU::CALL_nn(const byte & op_code) {
 	SP -= 2;
 	word newAddr = ReadWord();
-	MMU->WriteWord(SP, PC);
+	MMU.WriteWord(SP, PC);
 	PC = newAddr;
 	// TODO: 12 or 24 cycles ?
 	return 12;
@@ -1631,13 +1657,13 @@ int CPU::CALL_C_nn(const byte & op_code) {
 int CPU::RST_n(const byte & op_code) {
 	byte n = 8 * ((op_code >> 3) & 0x7);
 	SP -= 2;
-	MMU->WriteWord(SP, PC);
+	MMU.WriteWord(SP, PC);
 	PC = n;
 	return 32;
 }
 
 int CPU::RET(const byte & op_code) {
-	word addr = MMU->ReadWord(SP);
+	word addr = MMU.ReadWord(SP);
 	SP += 2;
 	PC = addr;
 	return 8;

@@ -2,10 +2,15 @@
 #include "Types.h"
 #include "Memory.h"
 
+#define CLOCK_SPEED 4194304
+
 #define FLAG_ZERO 7
 #define FLAG_SUBTRACT 6
 #define FLAG_HALF_CARRY 5
 #define FLAG_CARRY 4
+
+#define IE 0xFFFF
+#define IF 0xFF0F
 
 class CPU {
 
@@ -14,7 +19,7 @@ private:
 	byte registers[8];
 	word SP;
 	word PC;
-	Memory* MMU;
+	Memory &MMU;
 
 	bool halted;
 	bool interruptsEnabled;
@@ -25,12 +30,15 @@ private:
 
 public:
 	
-	CPU(const char* rom_fname);
-	~CPU();
+	CPU(Memory &MMU);
 
 	int Advance();
+	void RequestInterrupt(int id);
+	void HandleInterrupts();
 
 private:
+
+	void PerformInterrupt(int id);
 
 	word CombineRegisters(const byte & r1_id, const byte & r2_id);
 	void SplitIntoRegisters(const word & val, const byte & r1_id, const byte & r2_id);

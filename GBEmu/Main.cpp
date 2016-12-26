@@ -1,9 +1,7 @@
-#include "CPU.h"
+#include "GB.h"
 
 int main(int argc, char ** argv) {
-  CPU *cpu = new CPU(argv[1]);
-  for (int i = 0; i < atoi(argv[2]); i++) {
-    cpu->Advance();
-  }
+  GB gb(argv[1]);
+  gb.Run();
   return 0;
 }

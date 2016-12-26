@@ -16,17 +16,16 @@ private:
 	bool ramBankingMode;
 	byte MBCMode;
 
-
 	void LoadCartridge(const char* fname);
 	void ToggleRAMEnabled(const word& address, const byte& val);
 	void ChangeBanks(const word& address, const byte& val);
 
 public:
 	Memory(const char* rom_fname);
-	~Memory();
 	
 	byte ReadByte(const word& address);
 	word ReadWord(const word& address);
 	void WriteByte(const word& address, const byte& val);
 	void WriteWord(const word& address, const word& val);
+	void WriteByteDirect(const word& address, const byte& data);
 };

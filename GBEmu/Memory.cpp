@@ -138,6 +138,10 @@ void Memory::WriteByte(const word & address, const byte & val) {
 	if (address == 0xFF02 && val == 0x81) {
 		std::cout << (char)(m_MMU[0xFF01]);
 	}
+	if (address == 0xFF04) {
+		m_MMU[address] = 0;
+		return;
+	}
 	m_MMU[address] = val;
 }
 
@@ -146,3 +150,6 @@ void Memory::WriteWord(const word & address, const word & val) {
 	WriteByte(address + 1, val >> 8);
 }
 
+void Memory::WriteByteDirect(const word & address, const byte & data) {
+	m_MMU[address] = data;
+}
