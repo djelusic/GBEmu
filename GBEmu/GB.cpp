@@ -3,7 +3,11 @@
 #include <chrono>
 #include <thread>
 
-GB::GB(const char* rom_fname) : MMU(rom_fname), Cpu(MMU), timers(Cpu, MMU) {}
+GB::GB(const char* rom_fname) : 
+  MMU(rom_fname), 
+  Cpu(MMU), 
+  timers(Cpu, MMU),
+  graphics(MMU, Cpu) {}
 
 void GB::AdvanceFrame() {
   currentCycles = 0;
@@ -11,9 +15,10 @@ void GB::AdvanceFrame() {
     Cpu.HandleInterrupts();
     int cycles = Cpu.Advance();
     timers.Update(cycles);
-    Cpu.HandleInterrupts();
+    graphics.Update(cycles);
     currentCycles += cycles;
   }
+  graphics.RenderScreen();
 }
 
 void GB::Run() {

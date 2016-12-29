@@ -2,6 +2,7 @@
 #include "CPU.h"
 #include "Memory.h"
 #include "Timers.h"
+#include "Graphics.h"
 
 class GB {
 
@@ -13,6 +14,7 @@ private:
   Timers timers;
   Memory MMU;
   CPU Cpu;
+  Graphics graphics;
 
 public:
 
