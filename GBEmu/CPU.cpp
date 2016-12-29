@@ -598,6 +598,9 @@ CPU::CPU(Memory &MMU) : MMU(MMU) {
 }
 
 int CPU::Advance() {
+	if (halted) {
+		return NOP(0);
+	}
 	byte opcode = ReadByte();
 	int cycles = 0;
 	if (opcode == 0xCB) {
@@ -611,6 +614,7 @@ int CPU::Advance() {
 }
 
 void CPU::RequestInterrupt(int id) {
+	halted = false;
 	MMU.WriteByte(IF, MMU.ReadByte(IF) | (1 << id));
 }
 
@@ -797,7 +801,7 @@ byte CPU::DECByte(const byte & b) {
 	if (result == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
 	SetFlag(FLAG_SUBTRACT);
-	if ((result & 0xF) == 0) SetFlag(FLAG_HALF_CARRY);
+	if ((result & 0xF) == 0xF) SetFlag(FLAG_HALF_CARRY);
 	else ResetFlag(FLAG_HALF_CARRY);
 	return result;
 }
@@ -1184,7 +1188,7 @@ int CPU::INC_r(const byte & op_code) {
 
 int CPU::INC_HLm(const byte & op_code) {
 	byte val = MMU.ReadByte(CombineRegisters(4, 5));
-	MMU.WriteByte(INCByte(val), CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), INCByte(val));
 	return 12;
 }
 
@@ -1196,7 +1200,7 @@ int CPU::DEC_r(const byte & op_code) {
 
 int CPU::DEC_HLm(const byte & op_code) {
 	byte val = MMU.ReadByte(CombineRegisters(4, 5));
-	MMU.WriteByte(DECByte(val), CombineRegisters(4, 5));
+	MMU.WriteByte(CombineRegisters(4, 5), DECByte(val));
 	return 12;
 }
 
@@ -1304,7 +1308,7 @@ int CPU::SWAP_HLm(const byte & op_code) {
 }
 
 int CPU::DAA(const byte & op_code) {
-	byte A = registers[7];
+	int A = registers[7];
 	if (!GetFlag(FLAG_SUBTRACT)) {
 		if (GetFlag(FLAG_HALF_CARRY) || (A & 0xF) > 9) A += 0x6;
 		if (GetFlag(FLAG_CARRY) || (A > 0x9F)) A += 0x60;
@@ -1318,7 +1322,7 @@ int CPU::DAA(const byte & op_code) {
 	A &= 0xFF;
 	if (A == 0) SetFlag(FLAG_ZERO);
 	else ResetFlag(FLAG_ZERO);
-	registers[7] = A;
+	registers[7] = (byte)A;
 	return 4;
 }
 
@@ -1564,25 +1568,37 @@ int CPU::JP_nn(const byte & op_code) {
 
 int CPU::JP_NZ_nn(const byte & op_code) {
 	word addr = ReadWord();
-	if (!GetFlag(FLAG_ZERO)) PC = addr;
+	if (!GetFlag(FLAG_ZERO)) {
+		PC = addr;
+		return 16;
+	}
 	return 12;
 }
 
 int CPU::JP_Z_nn(const byte & op_code) {
 	word addr = ReadWord();
-	if (GetFlag(FLAG_ZERO)) PC = addr;
+	if (GetFlag(FLAG_ZERO)) {
+		PC = addr;
+		return 16;
+	}
 	return 12;
 }
 
 int CPU::JP_NC_nn(const byte & op_code) {
 	word addr = ReadWord();
-	if (!GetFlag(FLAG_CARRY)) PC = addr;
+	if (!GetFlag(FLAG_CARRY)) {
+		PC = addr;
+		return 16;
+	}
 	return 12;
 }
 
 int CPU::JP_C_nn(const byte & op_code) {
 	word addr = ReadWord();
-	if (GetFlag(FLAG_CARRY)) PC = addr;
+	if (GetFlag(FLAG_CARRY)) {
+		PC = addr;
+		return 16;
+	}
 	return 12;
 }
 
@@ -1599,25 +1615,37 @@ int CPU::JR_n(const byte & op_code) {
 
 int CPU::JR_NZ_n(const byte & op_code) {
 	sbyte n = ReadByte();	
-	if (!GetFlag(FLAG_ZERO)) PC += n;
+	if (!GetFlag(FLAG_ZERO)) {
+		PC += n;
+		return 12;
+	}
 	return 8;
 }
 
 int CPU::JR_Z_n(const byte & op_code) {
 	sbyte n = ReadByte();	
-	if (GetFlag(FLAG_ZERO)) PC += n;
+	if (GetFlag(FLAG_ZERO)) { 
+		PC += n;
+		return 12;
+	}
 	return 8;
 }
 
 int CPU::JR_NC_n(const byte & op_code) {
 	sbyte n = ReadByte();	
-	if (!GetFlag(FLAG_CARRY)) PC += n;
+	if (!GetFlag(FLAG_CARRY)) {
+		PC += n;
+		return 12;
+	}
 	return 8;
 }
 
 int CPU::JR_C_n(const byte & op_code) {
 	sbyte n = ReadByte();	
-	if (GetFlag(FLAG_CARRY)) PC += n;
+	if (GetFlag(FLAG_CARRY)) {
+		PC += n;
+		return 12;
+	}
 	return 8;
 }
 
@@ -1626,31 +1654,42 @@ int CPU::CALL_nn(const byte & op_code) {
 	word newAddr = ReadWord();
 	MMU.WriteWord(SP, PC);
 	PC = newAddr;
-	// TODO: 12 or 24 cycles ?
-	return 12;
+	return 24;
 }
 
 int CPU::CALL_NZ_nn(const byte & op_code) {
-	if (!GetFlag(FLAG_ZERO)) CALL_nn(0);
-	else PC += 2;
+	if (!GetFlag(FLAG_ZERO)) {
+		CALL_nn(0);
+		return 24;
+	}
+	PC += 2;
 	return 12;
 }
 
 int CPU::CALL_Z_nn(const byte & op_code) {
-	if (GetFlag(FLAG_ZERO)) CALL_nn(0);
-	else PC += 2;
+	if (GetFlag(FLAG_ZERO)) {
+		CALL_nn(0);
+		return 24;
+	}
+	PC += 2;
 	return 12;
 }
 
 int CPU::CALL_NC_nn(const byte & op_code) {
-	if (!GetFlag(FLAG_CARRY)) CALL_nn(0);
-	else PC += 2;
+	if (!GetFlag(FLAG_CARRY)) {
+		CALL_nn(0);
+		return 24;
+	}
+	PC += 2;
 	return 12;
 }
 
 int CPU::CALL_C_nn(const byte & op_code) {
-	if (GetFlag(FLAG_CARRY)) CALL_nn(0);
-	else PC += 2;
+	if (GetFlag(FLAG_CARRY)) {
+		CALL_nn(0);
+		return 24;
+	}
+	PC += 2;
 	return 12;
 }
 
@@ -1659,7 +1698,7 @@ int CPU::RST_n(const byte & op_code) {
 	SP -= 2;
 	MMU.WriteWord(SP, PC);
 	PC = n;
-	return 32;
+	return 16;
 }
 
 int CPU::RET(const byte & op_code) {
@@ -1672,6 +1711,7 @@ int CPU::RET(const byte & op_code) {
 int CPU::RET_NZ(const byte & op_code) {
 	if (!GetFlag(FLAG_ZERO)) {
 		RET(0);
+		return 20;
 	}
 	return 8;
 }
@@ -1679,6 +1719,7 @@ int CPU::RET_NZ(const byte & op_code) {
 int CPU::RET_Z(const byte & op_code) {
 	if (GetFlag(FLAG_ZERO)) {
 		RET(0);
+		return 20;
 	}
 	return 8;
 }
@@ -1686,6 +1727,7 @@ int CPU::RET_Z(const byte & op_code) {
 int CPU::RET_NC(const byte & op_code) {
 	if (!GetFlag(FLAG_CARRY)) {
 		RET(0);
+		return 20;
 	}
 	return 8;
 }
@@ -1693,6 +1735,7 @@ int CPU::RET_NC(const byte & op_code) {
 int CPU::RET_C(const byte & op_code) {
 	if (GetFlag(FLAG_CARRY)) {
 		RET(0);
+		return 20;
 	}
 	return 8;
 }
@@ -1700,5 +1743,5 @@ int CPU::RET_C(const byte & op_code) {
 int CPU::RETI(const byte & op_code) {
 	RET(0);
 	interruptsEnabled = true;
-	return 8;
+	return 16;
 }

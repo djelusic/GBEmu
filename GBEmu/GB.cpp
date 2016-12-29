@@ -8,6 +8,7 @@ GB::GB(const char* rom_fname) : MMU(rom_fname), Cpu(MMU), timers(Cpu, MMU) {}
 void GB::AdvanceFrame() {
   currentCycles = 0;
   while (currentCycles < CYCLES_PER_FRAME) {
+    Cpu.HandleInterrupts();
     int cycles = Cpu.Advance();
     timers.Update(cycles);
     Cpu.HandleInterrupts();

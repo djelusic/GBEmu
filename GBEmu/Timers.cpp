@@ -28,11 +28,10 @@ void Timers::Update(int cycles) {
 void Timers::UpdateTimer(int cycles) {
   if (!TimerEnabled()) return;
   SetUpdateFrequency();
-  if (currentCycles <= cyclesUntilUpdate) {
-    currentCycles += cycles;
-    return;
-  }
+  currentCycles += cycles;
+  if (currentCycles <= cyclesUntilUpdate) return;
   currentCycles = 0;
+  byte timerValue = MMU.ReadByte(TIMA);
   if (MMU.ReadByte(TIMA) == 0xFF) {
     Cpu.RequestInterrupt(2);
     MMU.WriteByte(TIMA, MMU.ReadByte(TMA));
@@ -42,9 +41,8 @@ void Timers::UpdateTimer(int cycles) {
 }
 
 void Timers::UpdateDR(int cycles) {
-  if (currentCyclesDR <= cyclesUntilUpdateDR) {
-    currentCyclesDR += cycles;
-  }
+  currentCyclesDR += cycles;
+  if (currentCyclesDR <= cyclesUntilUpdateDR) return;
   currentCyclesDR = 0;
   MMU.WriteByteDirect(DR, MMU.ReadByte(DR) + 1);
 }
