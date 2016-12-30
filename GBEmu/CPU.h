@@ -23,6 +23,7 @@ private:
 
 	bool halted;
 	bool interruptsEnabled;
+	bool delayInterrupt;
 
 	typedef int(CPU::*opCode)(const byte & op_code);
 	opCode opCodeMap[0xFF + 1];

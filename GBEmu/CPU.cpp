@@ -15,6 +15,7 @@ CPU::CPU(Memory &MMU) : MMU(MMU) {
 
 	halted = false;
 	interruptsEnabled = true;
+	delayInterrupt = false;
 
 	// 00
 	opCodeMap[0x00] = &CPU::NOP;
@@ -619,6 +620,10 @@ void CPU::RequestInterrupt(int id) {
 }
 
 void CPU::HandleInterrupts() {
+	if (delayInterrupt) {
+		delayInterrupt = false;
+		return;
+	}
 	byte requestedInterrupts = MMU.ReadByte(IF);
 	if (!interruptsEnabled || !requestedInterrupts) return;
 	byte enabledInterrupts = MMU.ReadByte(IE);
@@ -1363,6 +1368,7 @@ int CPU::DI(const byte & op_code) {
 }
 
 int CPU::EI(const byte & op_code) {
+	delayInterrupt = true;
 	interruptsEnabled = true;
 	return 4;
 }
@@ -1742,6 +1748,6 @@ int CPU::RET_C(const byte & op_code) {
 
 int CPU::RETI(const byte & op_code) {
 	RET(0);
-	interruptsEnabled = true;
+	EI(0);
 	return 16;
 }
