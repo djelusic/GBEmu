@@ -46,7 +46,8 @@ private:
   void SetMode(int mode);
   void HandleLCDStatus();
   void DrawScanline();
-  void DrawTiles();
+  void DrawBackgroundTiles();
+  void DrawWindowTiles();
   void DrawSprites();
   int GetColor(int color_id);
 };
