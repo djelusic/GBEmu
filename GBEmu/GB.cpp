@@ -18,7 +18,6 @@ void GB::AdvanceFrame() {
     graphics.Update(cycles);
     currentCycles += cycles;
   }
-  graphics.RenderScreen();
 }
 
 void GB::Run() {

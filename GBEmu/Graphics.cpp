@@ -15,22 +15,56 @@ void Graphics::InitSDL() {
 }
 
 void Graphics::Update(int cycles) {
-  HandleLCDStatus();
+  byte LCDStat = MMU.ReadByte(STAT);
+  byte currentMode = LCDStat & 0x3;
+  byte currentScanline = MMU.ReadByte(LY);
+
   if (!LCDEnabled()) {
+    SetMode(1);
     MMU.WriteByteDirect(LY, 0);
     return;
   }
-  currentCycles += cycles; 
-
-  if (currentCycles >= CYCLES_PER_SCANLINE) {
-    currentCycles = 0;
-
-    byte newLineCount = MMU.ReadByte(LY) + 1;
-    MMU.WriteByteDirect(LY, newLineCount <= 153 ? newLineCount : 0);
-
-    if (newLineCount == 144) Cpu.RequestInterrupt(0);
-    if (newLineCount < 144) DrawScanline();
+  currentCycles += cycles;
+  if (currentMode == 2 && currentCycles >= 80) {
+    SetMode(3);
   }
+  if (currentMode == 3 && currentCycles >= 252) {
+    SetMode(0);
+    DrawScanline();
+    if (LCDStat & 0x8) Cpu.RequestInterrupt(1);
+  }
+  if (currentMode == 0 && currentCycles >= 456) {
+    currentCycles = 0;
+    MMU.WriteByteDirect(LY, currentScanline + 1);
+    if (currentScanline == 143) {
+      SetMode(1);
+      Cpu.RequestInterrupt(0);
+      if (LCDStat & 0x10) Cpu.RequestInterrupt(1);
+      RenderScreen();
+    }
+    else {
+      SetMode(2);
+      if (LCDStat & 0x20) Cpu.RequestInterrupt(1);
+    }
+  }
+  if (currentMode == 1 && currentCycles >= 456) {
+    currentCycles = 0;
+    MMU.WriteByteDirect(LY, currentScanline + 1);
+    if (currentScanline == 153) {
+      SetMode(2);
+      MMU.WriteByteDirect(LY, 0);
+      if (LCDStat & 0x20) Cpu.RequestInterrupt(1);
+    }
+  }
+  if (currentScanline == MMU.ReadByte(LYC)) {
+    MMU.WriteByte(STAT, MMU.ReadByte(STAT) | 4);
+    if (LCDStat & 0x40) Cpu.RequestInterrupt(1);
+  }
+  else MMU.WriteByte(STAT, MMU.ReadByte(STAT) & ~4);
+}
+
+void Graphics::SetMode(int mode) {
+  MMU.WriteByte(STAT, (MMU.ReadByte(STAT) & 0xFC) | mode);
 }
 
 void Graphics::RenderScreen() {
@@ -50,8 +84,18 @@ void Graphics::RenderScreen() {
         pixels[idx + 1] = display[i][j][2];
         pixels[idx + 2] = display[i][j][1];
         pixels[idx + 3] = display[i][j][0];
+        // if (display[i][j][0] != 0xFF) std::cout << '-';
+        // else std::cout << 0;
     }
+    // std::cout << std::endl;
   }
+  // std::cout << std::endl;
+
+  for (int i = 0x8000; i < 0x8010; i++) {
+    std::cout << std::bitset<8>(MMU.ReadByte(i));
+    if (i % 2 == 1) std::cout << std::endl;
+  }
+  std::cout << std::endl << std::endl;
 
   SDL_UnlockTexture(texture);
   SDL_RenderCopy(renderer, texture, nullptr, nullptr);
@@ -70,42 +114,6 @@ void Graphics::RenderScreen() {
 
 bool Graphics::LCDEnabled() {
   return !!(MMU.ReadByte(LCDC) & 0x80);
-}
-
-void Graphics::SetMode(int mode) {
-  MMU.WriteByte(STAT, (MMU.ReadByte(STAT) & 0xFC) | 1);
-}
-
-void Graphics::HandleLCDStatus() {
-  byte LCDStat = MMU.ReadByte(STAT);
-  byte currentMode = LCDStat & 0x3;
-  byte currentScanline = MMU.ReadByte(LY);
-
-  if (!LCDEnabled()) {
-    SetMode(1);
-    MMU.WriteByteDirect(LY, 0);
-    return;
-  }
-  if (currentScanline >= 144) {
-    SetMode(1);
-    if (currentMode != 1 && (LCDStat & 0x10)) Cpu.RequestInterrupt(1);
-  }
-  else if (currentCycles <= 80 && currentMode != 2) {
-    SetMode(2);
-    if (LCDStat & 0x20) Cpu.RequestInterrupt(1);
-  }
-  else if (currentCycles > 80 && currentCycles <= 252 && currentMode != 3) {
-    SetMode(3);
-  }
-  else if (currentCycles > 252 && currentMode != 0) {
-    SetMode(0);
-    if (LCDStat & 0x8) Cpu.RequestInterrupt(1);
-  }
-  if (currentScanline == MMU.ReadByte(LYC)) {
-    MMU.WriteByte(STAT, MMU.ReadByte(STAT) | 4);
-    if (LCDStat & 0x40) Cpu.RequestInterrupt(1);
-  }
-  else MMU.WriteByte(STAT, MMU.ReadByte(STAT) & ~4);
 }
 
 void Graphics::DrawScanline() {
