@@ -145,7 +145,7 @@ void Memory::WriteByte(const word & address, const byte & val) {
 	if (address == 0xFF46) {
 		word DMAAddr = val << 8;
 		for (int i = 0; i < 0xA0; i++)
-		 WriteByte(0xFFE0 + i, ReadByte(DMAAddr + i));
+		 WriteByte(0xFE00 + i, ReadByte(DMAAddr + i));
 	}
 	m_MMU[address] = val;
 }
