@@ -28,15 +28,14 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 	}
 	if (address >= 0x2000 && address <= 0x3FFF) {
 		currentROMBank = (currentROMBank & 0xE0) | (val & 0x1F);
-		if ((currentROMBank & 0x1) == 0) currentROMBank ++;
-		// TODO: what if MBC is 0??
+		if (currentROMBank % 0x20 == 0) currentROMBank ++;
 	}
 	if (address >= 0x4000 && address <= 0x5FFF) {
 		if (MBCMode == 1) {
 			if (ramBankingMode) currentRAMBank = val & 0x3;
 			else {
 				currentROMBank = (currentROMBank & 0x1F) | (val & 0xE0);
-				if ((currentROMBank & 0x1) == 0) currentROMBank++;
+				if (currentROMBank % 0x20 == 0) currentROMBank++;
 			}
 		}
 	}
