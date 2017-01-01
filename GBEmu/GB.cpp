@@ -4,8 +4,9 @@
 #include <thread>
 
 GB::GB(const char* rom_fname) : 
-  MMU(rom_fname), 
-  Cpu(MMU), 
+  controller(),
+  MMU(rom_fname, controller),
+  Cpu(MMU, controller), 
   timers(Cpu, MMU),
   graphics(MMU, Cpu) {}
 
@@ -13,6 +14,7 @@ void GB::AdvanceFrame() {
   currentCycles = 0;
   while (currentCycles < CYCLES_PER_FRAME) {
     Cpu.HandleInterrupts();
+    Cpu.HandleInput();
     int cycles = Cpu.Advance();
     timers.Update(cycles);
     graphics.Update(cycles);

@@ -3,6 +3,7 @@
 #include "Memory.h"
 #include "Timers.h"
 #include "Graphics.h"
+#include "Controller.h"
 
 class GB {
 
@@ -15,6 +16,7 @@ private:
   Memory MMU;
   CPU Cpu;
   Graphics graphics;
+  Controller controller;
 
 public:
 

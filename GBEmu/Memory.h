@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "Controller.h"
 #include <iostream>
 
 class Memory {
@@ -16,12 +17,14 @@ private:
 	bool ramBankingMode;
 	byte MBCMode;
 
+	Controller &controller;
+
 	void LoadCartridge(const char* fname);
 	void ToggleRAMEnabled(const word& address, const byte& val);
 	void ChangeBanks(const word& address, const byte& val);
 
 public:
-	Memory(const char* rom_fname);
+	Memory(const char* rom_fname, Controller &controller);
 	
 	byte ReadByte(const word& address);
 	word ReadWord(const word& address);

@@ -46,7 +46,7 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 	}
 }
 
-Memory::Memory(const char* rom_fname) {
+Memory::Memory(const char* rom_fname, Controller &controller) : controller(controller) {
 	m_MMU[0xFF05] = 0x00;
 	m_MMU[0xFF06] = 0x00;
 	m_MMU[0xFF07] = 0x00;
@@ -107,6 +107,9 @@ byte Memory::ReadByte(const word& address) {
 	if (address >= 0xA000 && address <= 0x9FFF) {
 		return m_CartridgeRAM[address + currentRAMBank * 0x2000];
 	}
+	if (address == 0xFF00) {
+		return controller.GetInput();
+	}
 	return address <= 0xFFFF ? m_MMU[address] : 0;
 }
 
@@ -133,6 +136,9 @@ void Memory::WriteByte(const word & address, const byte & val) {
 	if (address >= 0xFEA0 && address <= 0xFEFF) {
 		// Not usable
 		return;
+	}
+	if (address == 0xFF00) {
+		controller.SelectInput(val);
 	}
 	// redirect serial port to standard output
 	if (address == 0xFF02 && val == 0x81) {

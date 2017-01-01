@@ -1,6 +1,7 @@
 #pragma once
 #include "Types.h"
 #include "Memory.h"
+#include "Controller.h"
 
 #define CLOCK_SPEED 4194304
 
@@ -20,6 +21,7 @@ private:
 	word SP;
 	word PC;
 	Memory &MMU;
+	Controller &controller;
 
 	bool halted;
 	bool interruptsEnabled;
@@ -31,11 +33,12 @@ private:
 
 public:
 	
-	CPU(Memory &MMU);
+	CPU(Memory &MMU, Controller &controller);
 
 	int Advance();
 	void RequestInterrupt(int id);
 	void HandleInterrupts();
+	void HandleInput();
 
 private:
 

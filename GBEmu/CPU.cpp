@@ -1,6 +1,6 @@
 #include "CPU.h"
 
-CPU::CPU(Memory &MMU) : MMU(MMU) {
+CPU::CPU(Memory &MMU, Controller &controller) : MMU(MMU), controller(controller) {
 	registers[0] = 0x0; // B
 	registers[1] = 0x13; // C
 	registers[2] = 0x0; // D
@@ -631,6 +631,12 @@ void CPU::HandleInterrupts() {
 		if (requestedInterrupts & (1 << i) && enabledInterrupts & (1 << i)) {
 			PerformInterrupt(i);
 		}
+	}
+}
+
+void CPU::HandleInput() {
+	if (controller.HandleInput()) {
+		RequestInterrupt(4);
 	}
 }
 
