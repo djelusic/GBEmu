@@ -24,11 +24,13 @@ void GB::AdvanceFrame() {
 
 void GB::Run() {
   while (true) {
+    graphics.HandleSDLEvents();
     clock_t begin = clock();
     AdvanceFrame();
     clock_t end = clock();
     double elapsedSecs = double(end - begin) / CLOCKS_PER_SEC;
     int remainingTime =  (int)((TIME_PER_FRAME - elapsedSecs) * 1000);
+    // std::cout << elapsedSecs << std::endl;
     if (remainingTime < 0) remainingTime = 0;
     std::this_thread::sleep_for(
       std::chrono::milliseconds(remainingTime)

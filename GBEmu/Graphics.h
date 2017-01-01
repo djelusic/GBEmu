@@ -1,6 +1,7 @@
 #pragma once
 #include "Memory.h"
 #include "CPU.h"
+#include  <iomanip>
 
 #if WINDOWS
     #include <SDL.h>
@@ -15,7 +16,6 @@
 #define SCROLL_X 0xFF43
 #define LY 0xFF44
 #define LYC 0xFF45
-#define COLOR_PALETTE 0xFF47
 #define WINDOW_Y 0xFF4A
 #define WINDOW_X 0xFF4B
 
@@ -31,13 +31,13 @@ private:
   SDL_Window *window;
   SDL_Texture *texture;
   SDL_Renderer *renderer;
-  SDL_Event event;
 
 public:
 
   Graphics(Memory &MMU, CPU &Cpu);
   void Update(int cycles);
   void RenderScreen();
+  void HandleSDLEvents();
 
 private:
 
@@ -49,5 +49,5 @@ private:
   void DrawBackgroundTiles();
   void DrawWindowTiles();
   void DrawSprites();
-  int GetColor(int color_id);
+  int GetColor(int color_id, word paletteAddr);
 };
