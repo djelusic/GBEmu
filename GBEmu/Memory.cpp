@@ -103,8 +103,8 @@ byte Memory::ReadByte(const word& address) {
 	if (address >= 0x4000 && address <= 0x7FFF) {
 		return m_Cartridge[address + (currentROMBank - 1) * 0x4000];
 	}
-	if (address >= 0xA000 && address <= 0x9FFF) {
-		return m_CartridgeRAM[address + currentRAMBank * 0x2000];
+	if (address >= 0xA000 && address <= 0xBFFF && ramEnabled) {
+		return m_CartridgeRAM[address - 0xA000 + currentRAMBank * 0x2000];
 	}
 	if (address == 0xFF00) {
 		return controller.GetInput();
