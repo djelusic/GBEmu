@@ -6,9 +6,9 @@
 class Memory {
 
 private:
-	byte m_MMU[0x10000];
-	byte m_Cartridge[0x200000];
-	byte m_CartridgeRAM[0x8000];
+	byte *m_MMU;
+	byte *m_Cartridge;
+	byte *m_CartridgeRAM;
 
 	byte currentROMBank;
 	byte currentRAMBank;
@@ -25,6 +25,7 @@ private:
 
 public:
 	Memory(const char* rom_fname, Controller &controller);
+	~Memory();
 	
 	byte ReadByte(const word& address);
 	word ReadWord(const word& address);

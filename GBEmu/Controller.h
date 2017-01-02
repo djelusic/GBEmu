@@ -1,11 +1,6 @@
 #pragma once
 #include "Types.h"
-
-#if WINDOWS
-    #include <SDL.h>
-#else
-    #include <SDL2/SDL.h>
-#endif
+#include <SDL2/SDL.h>
 
 class Controller {
 

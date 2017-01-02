@@ -2,12 +2,7 @@
 #include "Memory.h"
 #include "CPU.h"
 #include  <iomanip>
-
-#if WINDOWS
-    #include <SDL.h>
-#else
-    #include <SDL2/SDL.h>
-#endif
+#include <SDL2/SDL.h>
 
 #define CYCLES_PER_SCANLINE 456
 #define LCDC 0xFF40

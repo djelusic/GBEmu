@@ -46,6 +46,10 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 }
 
 Memory::Memory(const char* rom_fname, Controller &controller) : controller(controller) {
+	m_MMU = new byte[0x10000]{};
+	m_Cartridge = new byte[0x200000]{};
+	m_CartridgeRAM = new byte[0x8000]{};
+
 	m_MMU[0xFF05] = 0x00;
 	m_MMU[0xFF06] = 0x00;
 	m_MMU[0xFF07] = 0x00;
@@ -94,6 +98,12 @@ Memory::Memory(const char* rom_fname, Controller &controller) : controller(contr
 	if (MBCVal > 3 && MBCVal <= 6) {
 		MBCMode = 2;
 	}
+}
+
+Memory::~Memory() {
+	delete[] m_MMU;
+	delete[] m_Cartridge;
+	delete[] m_CartridgeRAM;
 }
 
 byte Memory::ReadByte(const word& address) {

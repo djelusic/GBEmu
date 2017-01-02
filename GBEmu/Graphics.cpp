@@ -96,10 +96,10 @@ void Graphics::RenderScreen() {
   }
   std::cout << std::endl << std::endl;
 
-  for (int i = 0x9130; i < 0x9140; i++) {
-    std::cout << std::bitset<8>(MMU.ReadByte(i));
-    if (i % 2 == 1) std::cout << std::endl;
-  }
+  //for (int i = 0x8F10; i < 0x8F20; i++) {
+  //  std::cout << std::bitset<8>(MMU.ReadByte(i));
+  //  if (i % 2 == 1) std::cout << std::endl;
+  //}
   std::cout << std::endl << std::endl;
 
   std::cout << "Sprite palette 1: " << std::hex << (int)MMU.ReadByte(0xFF48) << std::endl;
