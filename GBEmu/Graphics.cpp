@@ -91,11 +91,12 @@ void Graphics::RenderScreen() {
   }
   // std::cout << std::endl;
 
-  // for (int i = 0x9880; i < 0x9890; i++) {
-  //   std::cout << std::hex << (int)MMU.ReadByte(i);
-  // }
+  for (int i = 0x9A60; i < 0x9A6A; i++) {
+    std::cout << std::hex << (int)MMU.ReadByte(i);
+  }
+  std::cout << std::endl << std::endl;
 
-  for (int i = 0x8F10; i < 0x8F20; i++) {
+  for (int i = 0x9130; i < 0x9140; i++) {
     std::cout << std::bitset<8>(MMU.ReadByte(i));
     if (i % 2 == 1) std::cout << std::endl;
   }
@@ -127,7 +128,7 @@ void Graphics::DrawScanline() {
   bool windowEnabled = LCDControl & 0x20;
   bool spritesEnabled = LCDControl & 2;
   DrawBackgroundTiles();
-  if (windowEnabled) DrawWindowTiles();
+  // if (windowEnabled) DrawWindowTiles();
   if (spritesEnabled) DrawSprites();
 }
 
@@ -138,11 +139,11 @@ void Graphics::DrawBackgroundTiles() {
 
   byte y = MMU.ReadByte(LY);
   byte lineY = y + MMU.ReadByte(SCROLL_Y);
-  byte tileY = (byte)(lineY / 8) % 32;
+  byte tileY = (lineY / 8);
 
   for (int x = 0; x < 160; x++) {
     byte lineX = x + MMU.ReadByte(SCROLL_X);
-    byte tileX = (byte)(lineX / 8) % 32;
+    byte tileX = (lineX / 8);
 
     word tileIdAddr = backgroundTilesAddr + tileY * 32 + tileX;
     byte tileId = MMU.ReadByte(tileIdAddr);
@@ -178,12 +179,12 @@ void Graphics::DrawWindowTiles() {
   byte y = MMU.ReadByte(LY);
   byte lineY = y - MMU.ReadByte(SCROLL_Y);
   if (lineY < 0) return;
-  byte tileY = (byte)(lineY / 8) % 32;
+  byte tileY = lineY / 8;
 
   for (int x = 0; x < 160; x++) {
     byte lineX = x - MMU.ReadByte(SCROLL_X) + 7;
     if (lineX < 0) continue;
-    byte tileX = (byte)(lineX / 8) % 32;
+    byte tileX = lineX / 8;
 
     word tileIdAddr = windowTilesAddr + tileY * 32 + tileX;
     byte tileId = MMU.ReadByte(tileIdAddr);
