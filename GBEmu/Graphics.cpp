@@ -19,11 +19,11 @@ void Graphics::Update(int cycles) {
   byte currentMode = LCDStat & 0x3;
   byte currentScanline = MMU.ReadByte(LY);
 
-  // if (!LCDEnabled()) {
-  //   // SetMode(1);
-  //   // MMU.WriteByteDirect(LY, 0);
-  //   return;
-  // }
+   if (!LCDEnabled()) {
+	SetMode(1);
+	MMU.WriteByteDirect(LY, 0);
+    return;
+  }
   currentCycles += cycles;
   if (currentMode == 2 && currentCycles >= 80) {
     SetMode(3);
@@ -128,7 +128,7 @@ void Graphics::DrawScanline() {
   bool windowEnabled = LCDControl & 0x20;
   bool spritesEnabled = LCDControl & 2;
   DrawBackgroundTiles();
-  // if (windowEnabled) DrawWindowTiles();
+  if (windowEnabled) DrawWindowTiles();
   if (spritesEnabled) DrawSprites();
 }
 
@@ -177,12 +177,12 @@ void Graphics::DrawWindowTiles() {
   word tilesDataAddr = (LCDControl & (1 << 4)) ? 0x8000 : 0x8800;
 
   byte y = MMU.ReadByte(LY);
-  byte lineY = y - MMU.ReadByte(SCROLL_Y);
+  int lineY = y - MMU.ReadByte(WINDOW_Y);
   if (lineY < 0) return;
   byte tileY = lineY / 8;
 
   for (int x = 0; x < 160; x++) {
-    byte lineX = x - MMU.ReadByte(SCROLL_X) + 7;
+    int lineX = x - MMU.ReadByte(WINDOW_X) + 7;
     if (lineX < 0) continue;
     byte tileX = lineX / 8;
 
@@ -247,11 +247,11 @@ void Graphics::DrawSprites() {
         case 2: r = 100; g = 100; b = 100; break;
         case 3: r = 0; g = 0; b = 0; break;
       }
-      if (!(attrs & (1 << 7))) {
+      //if (!(attrs & (1 << 7))) {
         display[currentScanline][xFinal][0] = r;
         display[currentScanline][xFinal][1] = g;
         display[currentScanline][xFinal][2] = b;
-      }
+      //}
     }
   }
 }
