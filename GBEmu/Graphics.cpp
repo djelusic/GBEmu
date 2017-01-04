@@ -1,8 +1,12 @@
 #include "Graphics.h"
+#include "Memory.h"
+#include "CPU.h"
+#include "GB.h"
 
-Graphics::Graphics(Memory &MMU, CPU &Cpu) : 
+Graphics::Graphics(GB *gb, Memory &MMU, CPU &Cpu) : 
   MMU(MMU),
   Cpu(Cpu),
+  gb(gb),
   currentCycles(0) {
     InitSDL();
   }
@@ -146,28 +150,24 @@ void Graphics::DrawBackgroundTiles() {
     byte tileX = (lineX / 8);
 
     word tileIdAddr = backgroundTilesAddr + tileY * 32 + tileX;
-    byte tileId = MMU.ReadByte(tileIdAddr);
+    byte tileId = MMU.ReadVRAM(tileIdAddr, 0);
+	byte tileAttrs = gb->CGBModeEnabled() ? MMU.ReadVRAM(tileIdAddr, 1) : 0;
+	int tileBankNumber = (tileAttrs & (1 << 3)) ? 1 : 0;
 
     word tileDataAddr = 0;
     if (tilesDataAddr == 0x8000) tileDataAddr = tilesDataAddr + tileId * 0x10;
     else tileDataAddr = tilesDataAddr + ((sbyte)tileId + 128) * 0x10;
     
-    byte lineData1 = MMU.ReadByte(tileDataAddr + (lineY % 8) * 2);
-    byte lineData2 = MMU.ReadByte(tileDataAddr + (lineY % 8) * 2 + 1);
+    byte lineData1 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2, tileBankNumber);
+    byte lineData2 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2 + 1, tileBankNumber);
     int colorBit = 7 - (lineX % 8);
     int colorData = 0;
     if (lineData1 & (1 << colorBit)) colorData |= 1;
     if (lineData2 & (1 << colorBit)) colorData |= 2;
-    byte r, g, b;
-    switch(GetColor(colorData, 0xFF47)) {
-      case 0: r = 255; g = 255; b = 255; break;
-      case 1: r = 200; g = 200; b = 200; break;
-      case 2: r = 100; g = 100; b = 100; break;
-      case 3: r = 0; g = 0; b = 0; break;
-    }
-    display[y][x][0] = r;
-    display[y][x][1] = g;
-    display[y][x][2] = b;
+	Color color = GetColor(colorData, tileAttrs, false, 0);
+    display[y][x][0] = color.R;
+    display[y][x][1] = color.G;
+    display[y][x][2] = color.B;
   }
 }
 
@@ -187,28 +187,24 @@ void Graphics::DrawWindowTiles() {
     byte tileX = lineX / 8;
 
     word tileIdAddr = windowTilesAddr + tileY * 32 + tileX;
-    byte tileId = MMU.ReadByte(tileIdAddr);
+    byte tileId = MMU.ReadVRAM(tileIdAddr, 0);
+	byte tileAttrs = gb->CGBModeEnabled() ? MMU.ReadVRAM(tileIdAddr, 1) : 0;
+	int tileBankNumber = (tileAttrs & (1 << 3)) ? 1 : 0;
 
     word tileDataAddr = 0;
     if (tilesDataAddr == 0x8000) tileDataAddr = tilesDataAddr + tileId * 0x10;
     else tileDataAddr = tilesDataAddr + ((sbyte)tileId + 128) * 0x10;
     
-    byte lineData1 = MMU.ReadByte(tileDataAddr + (lineY % 8) * 2);
-    byte lineData2 = MMU.ReadByte(tileDataAddr + (lineY % 8) * 2 + 1);
+    byte lineData1 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2, tileBankNumber);
+    byte lineData2 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2 + 1, tileBankNumber);
     int colorBit = 7 - (lineX % 8);
     int colorData = 0;
     if (lineData1 & (1 << colorBit)) colorData |= 1;
     if (lineData2 & (1 << colorBit)) colorData |= 2;
-    byte r, g, b;
-    switch(GetColor(colorData, 0xFF47)) {
-      case 0: r = 255; g = 255; b = 255; break;
-      case 1: r = 200; g = 200; b = 200; break;
-      case 2: r = 100; g = 100; b = 100; break;
-      case 3: r = 0; g = 0; b = 0; break;
-    }
-    display[y][x][0] = r;
-    display[y][x][1] = g;
-    display[y][x][2] = b;
+	Color color = GetColor(colorData, tileAttrs, false, 0);
+    display[y][x][0] = color.R;
+    display[y][x][1] = color.G;
+    display[y][x][2] = color.B;
   }
 }
 
@@ -226,10 +222,11 @@ void Graphics::DrawSprites() {
     int line = currentScanline - y;
     if (attrs & (1 << 6)) line = spriteSize - line;
     if (spriteSize == 16) tileId &= 0xFE;
+	int tileBankNumber = (attrs & (1 << 3)) ? 1 : 0;
 
     word tileDataAddr = 0x8000 + tileId * 16 + line * 2;
-    byte tileData1 = MMU.ReadByte(tileDataAddr);
-    byte tileData2 = MMU.ReadByte(tileDataAddr + 1);
+    byte tileData1 = MMU.ReadVRAM(tileDataAddr, tileBankNumber);
+    byte tileData2 = MMU.ReadVRAM(tileDataAddr + 1, tileBankNumber);
 
     for (int xLine = 0; xLine < 8; xLine++) {
       int xFinal = x + xLine;
@@ -239,32 +236,53 @@ void Graphics::DrawSprites() {
       if (tileData1 & (1 << colorBit)) colorData |= 1;
       if (tileData2 & (1 << colorBit)) colorData |= 2;
       if (colorData == 0) continue;
-      byte r, g, b;
-      word paletteAddr = (attrs & (1 << 4)) ? 0xFF49 : 0xFF48;
-      switch(GetColor(colorData, paletteAddr)) {
-        case 0: r = 255; g = 255; b = 255; break;
-        case 1: r = 200; g = 200; b = 200; break;
-        case 2: r = 100; g = 100; b = 100; break;
-        case 3: r = 0; g = 0; b = 0; break;
+	  Color color = GetColor(colorData, 0, true, attrs);
+
+	  // If LCDC bit 0 is set in CGB mode, sprites will always be displayed
+	  // on top of the background and window.
+	  // Note: if bit 0 is cleared, both window and background will not be rendered on a CGB.
+	  // This could lead to possible compatibility problems with monochrome GB games
+	  // if they choose to only display the window, so I chose not to emulate it here.
+	  byte LCDControl = MMU.ReadByte(LCDC);
+	  bool spriteMasterPriority = gb->CGBModeEnabled() && !(LCDControl & 1);
+      if (!(attrs & (1 << 7)) || spriteMasterPriority) {
+        display[currentScanline][xFinal][0] = color.R;
+        display[currentScanline][xFinal][1] = color.G;
+        display[currentScanline][xFinal][2] = color.B;
       }
-      //if (!(attrs & (1 << 7))) {
-        display[currentScanline][xFinal][0] = r;
-        display[currentScanline][xFinal][1] = g;
-        display[currentScanline][xFinal][2] = b;
-      //}
     }
   }
 }
 
-int Graphics::GetColor(int colorId, word paletteAddr) {
-  byte palette = MMU.ReadByte(paletteAddr);
-  switch(colorId) {
-    case 0: return palette & 3;
-    case 1: return (palette >> 2) & 3;
-    case 2: return (palette >> 4) & 3;
-    case 3: return (palette >> 6) & 3; 
-  }
-  return 0;
+Color Graphics::GetColor(int colorId, byte bgAttrs, bool isObj, byte objAttrs) {
+	Color result;
+	if (!gb->CGBModeEnabled()) {
+		word paletteAddr = 0xFF47;
+		if (isObj) paletteAddr = (objAttrs & (1 << 4)) ? 0xFF49 : 0xFF48;
+		byte paletteData = MMU.ReadByte(paletteAddr);
+		byte palette[4]{
+			paletteData & 3,
+			(paletteData >> 2) & 3,
+			(paletteData >> 4) & 3,
+			(paletteData >> 6) & 3
+		};
+		switch (palette[colorId]) {
+		case 0: result.R = 255; result.G = 255; result.B = 255; break;
+		case 1: result.R = 200; result.G = 200; result.B = 200; break;
+		case 2: result.R = 100; result.G = 100; result.B = 100; break;
+		case 3: result.R = 0; result.G = 0; result.B = 0; break;
+		}
+	}
+	else {
+		int paletteNumber = isObj ? (objAttrs & 0x7) : (bgAttrs & 0x7);
+		word colorAddr = paletteNumber * 8 + colorId * 2;
+		if (isObj) colorAddr += 0x40;
+		word colorData = MMU.GetPaletteData(colorAddr);
+		result.B = colorData & 0x1F;
+		result.G = (colorData & 0x3E0) >> 5;
+		result.R = (colorData & 0x7C00) >> 10;
+	}
+	return result;
 }
 
 void Graphics::HandleSDLEvents() {

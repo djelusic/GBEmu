@@ -1,7 +1,5 @@
 #pragma once
 #include "Types.h"
-#include "Memory.h"
-#include "Controller.h"
 
 #define CLOCK_SPEED 4194304
 
@@ -12,6 +10,10 @@
 
 #define IE 0xFFFF
 #define IF 0xFF0F
+
+class Memory;
+class Controller;
+class GB;
 
 class CPU {
 
@@ -33,7 +35,7 @@ private:
 
 public:
 	
-	CPU(Memory &MMU, Controller &controller);
+	CPU(GB *gb, Memory &MMU, Controller &controller);
 
 	int Advance();
 	void RequestInterrupt(int id);

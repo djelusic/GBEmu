@@ -1,7 +1,6 @@
 #pragma once
-#include "Memory.h"
-#include "CPU.h"
-#include  <iomanip>
+#include "Types.h"
+#include <iomanip>
 #include <SDL2/SDL.h>
 
 #define CYCLES_PER_SCANLINE 456
@@ -13,6 +12,14 @@
 #define LYC 0xFF45
 #define WINDOW_Y 0xFF4A
 #define WINDOW_X 0xFF4B
+#define BGPI 0xFF68
+#define BGPD 0xFF69
+#define OBPI 0xFF6A
+#define OBPD 0xFF6B
+
+class Memory;
+class CPU;
+class GB;
 
 class Graphics {
 
@@ -22,6 +29,7 @@ private:
   byte display[144][160][3];
   Memory &MMU;
   CPU &Cpu;
+  GB *gb;
 
   SDL_Window *window;
   SDL_Texture *texture;
@@ -29,7 +37,7 @@ private:
 
 public:
 
-  Graphics(Memory &MMU, CPU &Cpu);
+  Graphics(GB *gb, Memory &MMU, CPU &Cpu);
   void Update(int cycles);
   void RenderScreen();
   void HandleSDLEvents();
@@ -39,10 +47,9 @@ private:
   void InitSDL();
   bool LCDEnabled();
   void SetMode(int mode);
-  void HandleLCDStatus();
   void DrawScanline();
   void DrawBackgroundTiles();
   void DrawWindowTiles();
   void DrawSprites();
-  int GetColor(int color_id, word paletteAddr);
+  Color GetColor(int colorId, byte bgAttrs, bool isObj, byte objAttrs);
 };

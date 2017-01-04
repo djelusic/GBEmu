@@ -5,10 +5,10 @@
 
 GB::GB(const char* rom_fname) : 
   controller(),
-  MMU(rom_fname, controller),
-  Cpu(MMU, controller), 
+  MMU(this, rom_fname, controller),
+  Cpu(this, MMU, controller), 
   timers(Cpu, MMU),
-  graphics(MMU, Cpu) {}
+  graphics(this, MMU, Cpu) {}
 
 void GB::AdvanceFrame() {
   currentCycles = 0;
@@ -36,4 +36,12 @@ void GB::Run() {
       std::chrono::milliseconds(remainingTime)
     );
   }
+}
+
+void GB::SetCGBMode(bool val) {
+	CGBMode = val;
+}
+
+bool GB::CGBModeEnabled() {
+	return CGBMode;
 }

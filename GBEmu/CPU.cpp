@@ -1,6 +1,9 @@
 #include "CPU.h"
+#include "Memory.h"
+#include "Controller.h"
+#include "GB.h"
 
-CPU::CPU(Memory &MMU, Controller &controller) : MMU(MMU), controller(controller) {
+CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : MMU(MMU), controller(controller) {
 	registers[0] = 0x0; // B
 	registers[1] = 0x13; // C
 	registers[2] = 0x0; // D
@@ -9,6 +12,10 @@ CPU::CPU(Memory &MMU, Controller &controller) : MMU(MMU), controller(controller)
 	registers[5] = 0x4D; // L
 	registers[6] = 0xB0; // F
 	registers[7] = 0x1; // A
+
+	if (gb->CGBModeEnabled()) {
+		registers[7] = 0x11;
+	}
 
 	SP = 0xFFFE;
 	PC = 0x100;

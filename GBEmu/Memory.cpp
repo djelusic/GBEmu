@@ -1,4 +1,5 @@
 #include "Memory.h"
+#include "GB.h"
 #include <fstream>
 #include <iterator>
 #include <vector>
@@ -16,7 +17,7 @@ void Memory::LoadCartridge(const char* fname) {
 
 void Memory::ToggleRAMEnabled(const word& address, const byte & val) {
 	if (MBCMode == 2 && (address & 0x100) != 0) return;
-	if (MBCMode == 1 || MBCMode == 2) {
+	if (MBCMode == 1 || MBCMode == 2 || MBCMode == 3) {
 		if ((val & 0xF) == 0xA) ramEnabled = true;
 		else ramEnabled = false;
 	}
@@ -27,8 +28,13 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 		ToggleRAMEnabled(address, val);
 	}
 	if (address >= 0x2000 && address <= 0x3FFF) {
-		currentROMBank = (currentROMBank & 0xE0) | (val & 0x1F);
-		if (currentROMBank % 0x20 == 0) currentROMBank ++;
+		if (MBCMode == 1 || MBCMode == 2) {
+			currentROMBank = (currentROMBank & 0xE0) | (val & 0x1F);
+			if (currentROMBank % 0x20 == 0) currentROMBank++;
+		}
+		if (MBCMode == 3) {
+			currentROMBank = val ? val : 1;
+		}
 	}
 	if (address >= 0x4000 && address <= 0x5FFF) {
 		if (MBCMode == 1) {
@@ -38,17 +44,30 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 				if (currentROMBank % 0x20 == 0) currentROMBank++;
 			}
 		}
+		if (MBCMode == 3) {
+			currentRAMBank = val & 0x3;
+		}
 	}
 	if (address >= 0x6000 && address <= 0x7FFF) {
-		if ((val & 0x1) == 1) ramBankingMode = true;
-		else ramBankingMode = false;
+		if (MBCMode == 1 || MBCMode == 2) {
+			if ((val & 0x1) == 1) ramBankingMode = true;
+			else ramBankingMode = false;
+		}
 	}
 }
 
-Memory::Memory(const char* rom_fname, Controller &controller) : controller(controller) {
+Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) : 
+	gb(gb), 
+	controller(controller) {
 	m_MMU = new byte[0x10000]{};
 	m_Cartridge = new byte[0x200000]{};
 	m_CartridgeRAM = new byte[0x8000]{};
+	m_VRAM = new byte[0x4000]{};
+	m_PaletteData = new byte[0x80]{};
+	
+	for (int i = 0; i < 0x40; i++) {
+		m_PaletteData[i] = 0xFF;
+	}
 
 	m_MMU[0xFF05] = 0x00;
 	m_MMU[0xFF06] = 0x00;
@@ -98,12 +117,23 @@ Memory::Memory(const char* rom_fname, Controller &controller) : controller(contr
 	if (MBCVal > 3 && MBCVal <= 6) {
 		MBCMode = 2;
 	}
+	// Pokemon TEST
+	if (MBCVal == 0x13 || MBCVal == 0x10) {
+		MBCMode = 3;
+	}
+
+	byte CGBEnable = m_Cartridge[0x143];
+	if (CGBEnable == 0x80 || CGBEnable == 0xC0) {
+		gb->SetCGBMode(true);
+	}
 }
 
 Memory::~Memory() {
 	delete[] m_MMU;
 	delete[] m_Cartridge;
 	delete[] m_CartridgeRAM;
+	delete[] m_VRAM;
+	delete[] m_PaletteData;
 }
 
 byte Memory::ReadByte(const word& address) {
@@ -113,11 +143,24 @@ byte Memory::ReadByte(const word& address) {
 	if (address >= 0x4000 && address <= 0x7FFF) {
 		return m_Cartridge[address + (currentROMBank - 1) * 0x4000];
 	}
+	if (address >= 0x8000 && address <= 0x9FFF) {
+		byte vramBank = m_MMU[0xFF4F] & 1;
+		if (!gb->CGBModeEnabled()) vramBank = 0;
+		return m_VRAM[address - 0x8000 + vramBank * 0x2000];
+	}
 	if (address >= 0xA000 && address <= 0xBFFF && ramEnabled) {
 		return m_CartridgeRAM[address - 0xA000 + currentRAMBank * 0x2000];
 	}
 	if (address == 0xFF00) {
 		return controller.GetInput();
+	}
+	if (address == 0xFF69 && gb->CGBModeEnabled()) {
+		byte index = m_MMU[0xFF68] & 0x3F;
+		return m_PaletteData[index];
+	}
+	if (address == 0xFF6B && gb->CGBModeEnabled()) {
+		byte index = m_MMU[0xFF6A] & 0x3F;
+		return m_PaletteData[index];
 	}
 	return address <= 0xFFFF ? m_MMU[address] : 0;
 }
@@ -131,6 +174,12 @@ word Memory::ReadWord(const word & address) {
 void Memory::WriteByte(const word & address, const byte & val) {
 	if (address <= 0x7FFF) {
 		ChangeBanks(address, val);
+		return;
+	}
+	if (address >= 0x8000 && address <= 0x9FFF) {
+		byte vramBank = m_MMU[0xFF4F] & 1;
+		if (!gb->CGBModeEnabled()) vramBank = 0;
+		m_VRAM[address - 0x8000 + vramBank * 0x2000] = val;
 		return;
 	}
 	if (address >= 0xA000 && address <= 0xBFFF && ramEnabled) {
@@ -162,6 +211,26 @@ void Memory::WriteByte(const word & address, const byte & val) {
 		for (int i = 0; i < 0xA0; i++)
 		 WriteByte(0xFE00 + i, ReadByte(DMAAddr + i));
 	}
+	if (address == 0xFF69 && gb->CGBModeEnabled()) {
+		byte currIndex = m_MMU[0xFF68] & 0x3F;
+		m_PaletteData[currIndex] = val;
+		if (m_MMU[0xFF68] & (1 << 7)) {
+			// Auto increment index
+			if (++currIndex == 0x40) currIndex = 0;
+			m_MMU[0xFF68] = (1 << 7) | currIndex;
+		}
+		return;
+	}
+	if (address == 0xFF6B && gb->CGBModeEnabled()) {
+		byte currIndex = m_MMU[0xFF6A] & 0x3F;
+		m_PaletteData[0x40 + currIndex] = val;
+		if (m_MMU[0xFF6A] & (1 << 7)) {
+			// Auto increment index
+			if (++currIndex == 0x40) currIndex = 0;
+			m_MMU[0xFF6A] = (1 << 7) | currIndex;
+		}
+		return;
+	}
 	m_MMU[address] = val;
 }
 
@@ -172,4 +241,12 @@ void Memory::WriteWord(const word & address, const word & val) {
 
 void Memory::WriteByteDirect(const word & address, const byte & data) {
 	m_MMU[address] = data;
+}
+
+byte Memory::ReadVRAM(const word & address, const int & bankNumber) {
+	return m_VRAM[address - 0x8000 + bankNumber * 0x2000];
+}
+
+word Memory::GetPaletteData(const word & address) {
+	return m_PaletteData[address] | (m_PaletteData[address + 1] << 8);
 }

@@ -14,15 +14,18 @@ private:
 
   int currentCycles;
   Controller controller;
-  CPU Cpu;
   Memory MMU;
+  CPU Cpu;
   Timers timers;
   Graphics graphics;
+  bool CGBMode;
 
 public:
 
   GB(const char* rom_fname);
   void Run();
+  void SetCGBMode(bool val);
+  bool CGBModeEnabled();
 
 private:
 
