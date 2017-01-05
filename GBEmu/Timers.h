@@ -1,10 +1,12 @@
 #pragma once
-#include "CPU.h"
 
 #define DR 0xFF04
 #define TIMA 0xFF05
 #define TMA 0xFF06
 #define TMC 0xFF07
+
+class CPU;
+class Memory;
 
 class Timers {
 

@@ -1,4 +1,6 @@
 #include "Timers.h"
+#include "CPU.h"
+#include "Memory.h"
 
 Timers::Timers(CPU &Cpu, Memory &MMU) : Cpu(Cpu), MMU(MMU) {
   SetUpdateFrequency();

@@ -34,6 +34,7 @@ void Graphics::Update(int cycles) {
   }
   if (currentMode == 3 && currentCycles >= 252) {
     SetMode(0);
+	MMU.HandleHBlank();
     DrawScanline();
     if (LCDStat & 0x8) Cpu.RequestInterrupt(1);
   }
@@ -95,16 +96,16 @@ void Graphics::RenderScreen() {
   }
   // std::cout << std::endl;
 
-  for (int i = 0x9A60; i < 0x9A6A; i++) {
-    std::cout << std::hex << (int)MMU.ReadByte(i);
-  }
-  std::cout << std::endl << std::endl;
+  //for (int i = 0x9A60; i < 0x9A6A; i++) {
+  //  std::cout << std::hex << (int)MMU.ReadByte(i);
+  //}
+  //std::cout << std::endl << std::endl;
 
   //for (int i = 0x8F10; i < 0x8F20; i++) {
   //  std::cout << std::bitset<8>(MMU.ReadByte(i));
   //  if (i % 2 == 1) std::cout << std::endl;
   //}
-  std::cout << std::endl << std::endl;
+  /*std::cout << std::endl << std::endl;
 
   std::cout << "Sprite palette 1: " << std::hex << (int)MMU.ReadByte(0xFF48) << std::endl;
   std::cout << "Sprite palette 2: " << std::hex << (int)MMU.ReadByte(0xFF49) << std::endl;
@@ -114,7 +115,7 @@ void Graphics::RenderScreen() {
     if (i % 32 == 0) std::cout << std::endl;
     std::cout << std::setfill('0') << std::setw(2) << std::hex << (int)(MMU.ReadByte(i));
   }
-  std::cout << std::endl << std::endl;
+  std::cout << std::endl << std::endl;*/
 
   SDL_UnlockTexture(texture);
   SDL_RenderCopy(renderer, texture, nullptr, nullptr);
@@ -157,10 +158,11 @@ void Graphics::DrawBackgroundTiles() {
     word tileDataAddr = 0;
     if (tilesDataAddr == 0x8000) tileDataAddr = tilesDataAddr + tileId * 0x10;
     else tileDataAddr = tilesDataAddr + ((sbyte)tileId + 128) * 0x10;
-    
-    byte lineData1 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2, tileBankNumber);
-    byte lineData2 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2 + 1, tileBankNumber);
-    int colorBit = 7 - (lineX % 8);
+	byte lineYOffset = (tileAttrs & (1 << 6)) ? (7 - (lineY % 8)) : (lineY % 8);
+
+    byte lineData1 = MMU.ReadVRAM(tileDataAddr + lineYOffset * 2, tileBankNumber);
+    byte lineData2 = MMU.ReadVRAM(tileDataAddr + lineYOffset * 2 + 1, tileBankNumber);
+    int colorBit = (tileAttrs & (1 << 5)) ? (lineX % 8) : (7 - (lineX % 8));
     int colorData = 0;
     if (lineData1 & (1 << colorBit)) colorData |= 1;
     if (lineData2 & (1 << colorBit)) colorData |= 2;
@@ -194,10 +196,11 @@ void Graphics::DrawWindowTiles() {
     word tileDataAddr = 0;
     if (tilesDataAddr == 0x8000) tileDataAddr = tilesDataAddr + tileId * 0x10;
     else tileDataAddr = tilesDataAddr + ((sbyte)tileId + 128) * 0x10;
+	byte lineYOffset = (tileAttrs & (1 << 6)) ? (7 - (lineY % 8)) : (lineY % 8);
     
-    byte lineData1 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2, tileBankNumber);
-    byte lineData2 = MMU.ReadVRAM(tileDataAddr + (lineY % 8) * 2 + 1, tileBankNumber);
-    int colorBit = 7 - (lineX % 8);
+    byte lineData1 = MMU.ReadVRAM(tileDataAddr + lineYOffset * 2, tileBankNumber);
+    byte lineData2 = MMU.ReadVRAM(tileDataAddr + lineYOffset * 2 + 1, tileBankNumber);
+    int colorBit = (tileAttrs & (1 << 5)) ? (lineX % 8) : (7 - (lineX % 8));
     int colorData = 0;
     if (lineData1 & (1 << colorBit)) colorData |= 1;
     if (lineData2 & (1 << colorBit)) colorData |= 2;

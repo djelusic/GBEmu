@@ -19,6 +19,7 @@ private:
   Timers timers;
   Graphics graphics;
   bool CGBMode;
+  bool framerateUnlocked;
 
 public:
 
@@ -26,6 +27,7 @@ public:
   void Run();
   void SetCGBMode(bool val);
   bool CGBModeEnabled();
+  void ToggleFrameLimit();
 
 private:
 

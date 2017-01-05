@@ -2,6 +2,8 @@
 #include "Types.h"
 #include <SDL2/SDL.h>
 
+class GB;
+
 class Controller {
 
 private:
@@ -10,10 +12,11 @@ private:
   byte buttons;
   bool dpadSelected;
   bool buttonsSelected;
+  GB *gb;
 
 public: 
 
-  Controller();
+  Controller(GB *gb);
   bool HandleInput();
   void SelectInput(const byte & val);
   byte GetInput();

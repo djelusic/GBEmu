@@ -1,6 +1,7 @@
 #include "Controller.h"
+#include "GB.h"
 
-Controller::Controller() {
+Controller::Controller(GB *gb) : gb(gb) {
   dpad = 0;
   buttons = 0;
   dpadSelected = false;
@@ -36,6 +37,9 @@ bool Controller::HandleInput() {
     if(keys[SDL_SCANCODE_M]) {
         newButtons |= (1 << 0);
     }
+	if (keys[SDL_SCANCODE_SPACE]) {
+		gb->ToggleFrameLimit();
+	}
     // Check if input has changed
     bool inputChanged = (dpadSelected && (dpad ^ newDpad)) || (buttonsSelected && (buttons ^ newButtons));
     dpad = newDpad;
