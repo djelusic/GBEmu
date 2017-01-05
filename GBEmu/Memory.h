@@ -12,15 +12,22 @@ private:
 	byte *m_Cartridge;
 	byte *m_CartridgeRAM;
 	byte *m_VRAM;
+	byte *m_WRAM;
 	byte *m_PaletteData;
 	GB *gb;
 
-	byte currentROMBank;
+	int currentROMBank;
 	byte currentRAMBank;
+	byte currentWRAMBank;
 
 	bool ramEnabled;
 	bool ramBankingMode;
 	byte MBCMode;
+
+	bool HDMAActive;
+	word HDMASrc;
+	word HDMADest;
+	int HDMALength;
 
 	Controller &controller;
 
@@ -40,4 +47,6 @@ public:
 
 	byte ReadVRAM(const word& address, const int& bankNumber);
 	word GetPaletteData(const word& address);
+	void InitiateDMATransfer(const byte& params);
+	void HandleHBlank();
 };
