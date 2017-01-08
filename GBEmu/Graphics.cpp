@@ -281,9 +281,11 @@ Color Graphics::GetColor(int colorId, byte bgAttrs, bool isObj, byte objAttrs) {
 		word colorAddr = paletteNumber * 8 + colorId * 2;
 		if (isObj) colorAddr += 0x40;
 		word colorData = MMU.GetPaletteData(colorAddr);
-		result.B = colorData & 0x1F;
-		result.G = (colorData & 0x3E0) >> 5;
-		result.R = (colorData & 0x7C00) >> 10;
+		// Convert from RGB555 to RGB888. Right shift the 5-bit value and OR it with its
+		// most significant bits.
+		result.B = ((colorData & 0x1F) << 3) | ((colorData & 0x1C) >> 2);
+		result.G = (((colorData & 0x3E0) >> 5) << 3) | ((colorData & 0x380) >> 7);
+		result.R = (((colorData & 0x7C00) >> 10) << 3) | ((colorData & 0x7000) >> 12);
 	}
 	return result;
 }
@@ -296,6 +298,7 @@ void Graphics::HandleSDLEvents() {
       SDL_DestroyRenderer(renderer);
       SDL_DestroyWindow(window);
       SDL_Quit();
+	  MMU.SaveRAM();
     }
   }
 }

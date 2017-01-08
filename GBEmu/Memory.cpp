@@ -59,15 +59,34 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 	}
 }
 
+void Memory::SaveRAM() {
+	std::ofstream fout("title.sav", std::ios::out | std::ios::binary);
+	int size = sizeof(m_CartridgeRAM);
+	fout.write((char*)m_CartridgeRAM, 0x20000);
+	fout.close();
+}
+
+void Memory::LoadRAM() {
+	std::ifstream fin("title.sav", std::ios::in | std::ios::binary);
+	fin.seekg(0, std::ios::end);
+	int length = fin.tellg();
+	fin.seekg(0, std::ios::beg);
+	fin.read((char*)m_CartridgeRAM, length);
+	fin.close();
+}
+
 Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) : 
 	gb(gb), 
-	controller(controller) {
+	controller(controller),
+	rom_fname(rom_fname) {
 	m_MMU = new byte[0x10000]{};
 	m_Cartridge = new byte[0x800000]{};
 	m_CartridgeRAM = new byte[0x20000]{};
 	m_VRAM = new byte[0x4000]{};
 	m_WRAM = new byte[0x8000]{};
 	m_PaletteData = new byte[0x80]{};
+
+	LoadRAM();
 	
 	for (int i = 0; i < 0x40; i++) {
 		m_PaletteData[i] = 0xFF;
@@ -137,6 +156,7 @@ Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) :
 }
 
 Memory::~Memory() {
+	SaveRAM();
 	delete[] m_MMU;
 	delete[] m_Cartridge;
 	delete[] m_CartridgeRAM;
