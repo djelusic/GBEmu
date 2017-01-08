@@ -17,7 +17,7 @@ void Memory::LoadCartridge(const char* fname) {
 
 void Memory::ToggleRAMEnabled(const word& address, const byte & val) {
 	if (MBCMode == 2 && (address & 0x100) != 0) return;
-	if ((val & 0xF) == 0xA) ramEnabled = true;
+	if ((val & 0xA) == 0xA) ramEnabled = true;
 	else ramEnabled = false;
 }
 
@@ -31,11 +31,12 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 			if (currentROMBank % 0x20 == 0) currentROMBank++;
 		}
 		if (MBCMode == 3) {
-			currentROMBank = (val & 0x7F) ? (val & 0x7F) : 1;
+			currentROMBank = (val & 0x7F);
+			if (currentROMBank == 0) currentROMBank = 1;
 		}
 		if (MBCMode == 5) {
-			if (address <= 0x2FFF) currentROMBank = (currentROMBank & 0x100) | val;
-			else if (val) currentROMBank += 0x100;
+			if (address <= 0x2FFF) currentROMBank = (currentROMBank & 0xFF00) | val;
+			else currentROMBank = (currentROMBank & 0xFF) | ((val & 1) << 8);
 		}
 	}
 	if (address >= 0x4000 && address <= 0x5FFF) {
@@ -46,10 +47,7 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 				if (currentROMBank % 0x20 == 0) currentROMBank++;
 			}
 		}
-		if (MBCMode == 3) {
-			if (val <= 3) currentRAMBank = val;
-		}
-		if (MBCMode == 5) {
+		if (MBCMode == 3 || MBCMode == 5) {
 			currentRAMBank = val;
 		}
 	}
@@ -105,6 +103,7 @@ Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) :
 	m_MMU[0xFF49] = 0xFF;
 	m_MMU[0xFF4A] = 0x00;
 	m_MMU[0xFF4B] = 0x00;
+	m_MMU[0xFF70] = 0x01;
 	m_MMU[0xFFFF] = 0x00;
 
 	currentROMBank = 1;
@@ -159,6 +158,7 @@ byte Memory::ReadByte(const word& address) {
 		return m_VRAM[address - 0x8000 + vramBank * 0x2000];
 	}
 	if (address >= 0xA000 && address <= 0xBFFF && ramEnabled) {
+		if (MBCMode == 3 && currentRAMBank > 3) return 0;
 		return m_CartridgeRAM[address - 0xA000 + currentRAMBank * 0x2000];
 	}
 	if (address >= 0xC000 && address <= 0xCFFF) {
@@ -166,6 +166,9 @@ byte Memory::ReadByte(const word& address) {
 	}
 	if (address >= 0xD000 && address <= 0xDFFF) {
 		return m_WRAM[address - 0xD000 + currentWRAMBank * 0x1000];
+	}
+	if (address >= 0xE000 && address <= 0xFDFF) {
+		return ReadByte(address - 0x2000);
 	}
 	if (address == 0xFF00) {
 		return controller.GetInput();
@@ -177,6 +180,9 @@ byte Memory::ReadByte(const word& address) {
 	if (address == 0xFF6B && gb->CGBModeEnabled()) {
 		byte index = m_MMU[0xFF6A] & 0x3F;
 		return m_PaletteData[index];
+	}
+	if (address == 0xFF70 && gb->CGBModeEnabled()) {
+		return currentWRAMBank | ~0x7;
 	}
 	return address <= 0xFFFF ? m_MMU[address] : 0;
 }
@@ -200,6 +206,7 @@ void Memory::WriteByte(const word & address, const byte & val) {
 	}
 	if (address >= 0xA000 && address <= 0xBFFF) {
 		if (!ramEnabled) return;
+		if (MBCMode == 3 && currentRAMBank > 3) return;
 		m_CartridgeRAM[address - 0xA000 + currentRAMBank * 0x2000] = val;
 		return;
 	}
@@ -212,8 +219,7 @@ void Memory::WriteByte(const word & address, const byte & val) {
 		return;
 	}
 	if (address >= 0xE000 && address <= 0xFDFF) {
-		m_MMU[address] = val;
-		m_MMU[address - 0x2000] = val;
+		WriteByte(address - 0x2000, val);
 		return;
 	}
 	if (address >= 0xFEA0 && address <= 0xFEFF) {

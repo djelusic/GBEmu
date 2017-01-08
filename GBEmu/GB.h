@@ -5,7 +5,7 @@
 #include "Graphics.h"
 #include "Controller.h"
 
-#define CYCLES_PER_FRAME 69905
+#define CYCLES_PER_FRAME 70224
 #define TIME_PER_FRAME 1.0 / 60.0
 
 class GB {

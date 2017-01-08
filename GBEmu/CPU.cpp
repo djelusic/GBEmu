@@ -22,7 +22,6 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : MMU(MMU), controller(con
 
 	halted = false;
 	interruptsEnabled = true;
-	delayInterrupt = false;
 
 	// 00
 	opCodeMap[0x00] = &CPU::NOP;
@@ -609,15 +608,16 @@ int CPU::Advance() {
 	if (halted) {
 		return NOP(0);
 	}
-	byte opcode = ReadByte();
 	int cycles = 0;
+	byte opcode = ReadByte();
 	if (opcode == 0xCB) {
 		opcode = ReadByte();
-		cycles = (this->*opCodeMapCB[opcode])(opcode);
+		cycles += (this->*opCodeMapCB[opcode])(opcode);
 	}
 	else if (opCodeMap[opcode] != nullptr) {
-		cycles = (this->*opCodeMap[opcode])(opcode);
+		cycles += (this->*opCodeMap[opcode])(opcode);
 	}
+	cycles += HandleInterrupts();
 	return cycles;
 }
 
@@ -626,19 +626,19 @@ void CPU::RequestInterrupt(int id) {
 	MMU.WriteByte(IF, MMU.ReadByte(IF) | (1 << id));
 }
 
-void CPU::HandleInterrupts() {
-	if (delayInterrupt) {
-		delayInterrupt = false;
-		return;
-	}
+int CPU::HandleInterrupts() {
 	byte requestedInterrupts = MMU.ReadByte(IF);
-	if (!interruptsEnabled || !requestedInterrupts) return;
+	if (!interruptsEnabled || !requestedInterrupts) return 0;
 	byte enabledInterrupts = MMU.ReadByte(IE);
+	int interruptCycles = 0;
 	for (int i = 0; i < 5; i++) {
 		if (requestedInterrupts & (1 << i) && enabledInterrupts & (1 << i)) {
 			PerformInterrupt(i);
+			interruptCycles += 20;
+			break;
 		}
 	}
+	return interruptCycles;
 }
 
 void CPU::HandleInput() {
@@ -656,6 +656,7 @@ void CPU::PerformInterrupt(int id) {
 		case 0: PC = 0x40; break;
 		case 1: PC = 0x48; break;
 		case 2: PC = 0x50; break;
+		case 3: PC = 0x58; break;
 		case 4: PC = 0x60; break;
 	}
 }
@@ -1375,13 +1376,16 @@ int CPU::HALT(const byte & op_code) {
 	return 4;
 }
 
+int CPU::STOP(const byte & op_code) {
+	return 0;
+}
+
 int CPU::DI(const byte & op_code) {
 	interruptsEnabled = false;
 	return 4;
 }
 
 int CPU::EI(const byte & op_code) {
-	delayInterrupt = true;
 	interruptsEnabled = true;
 	return 4;
 }

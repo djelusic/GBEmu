@@ -27,7 +27,6 @@ private:
 
 	bool halted;
 	bool interruptsEnabled;
-	bool delayInterrupt;
 
 	typedef int(CPU::*opCode)(const byte & op_code);
 	opCode opCodeMap[0xFF + 1];
@@ -39,7 +38,7 @@ public:
 
 	int Advance();
 	void RequestInterrupt(int id);
-	void HandleInterrupts();
+	int HandleInterrupts();
 	void HandleInput();
 
 private:
@@ -152,6 +151,7 @@ private:
 	int SCF(const byte & op_code);
 	int NOP(const byte & op_code);
 	int HALT(const byte & op_code);
+	int STOP(const byte & op_code);
 	int DI(const byte & op_code);
 	int EI(const byte & op_code);
 	int RLCA(const byte & op_code);
