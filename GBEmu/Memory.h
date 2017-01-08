@@ -2,6 +2,7 @@
 #include "Types.h"
 #include "Controller.h"
 #include <iostream>
+#include <fstream>
 
 class GB;
 
@@ -15,6 +16,8 @@ private:
 	byte *m_WRAM;
 	byte *m_PaletteData;
 	GB *gb;
+
+	const char *rom_fname;
 
 	int currentROMBank;
 	byte currentRAMBank;
@@ -49,4 +52,7 @@ public:
 	word GetPaletteData(const word& address);
 	void InitiateDMATransfer(const byte& params);
 	void HandleHBlank();
+
+	void SaveRAM();
+	void LoadRAM();
 };
