@@ -79,12 +79,12 @@ Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) :
 	gb(gb), 
 	controller(controller),
 	rom_fname(rom_fname) {
-	m_MMU = new byte[0x10000]{};
-	m_Cartridge = new byte[0x800000]{};
-	m_CartridgeRAM = new byte[0x20000]{};
-	m_VRAM = new byte[0x4000]{};
-	m_WRAM = new byte[0x8000]{};
-	m_PaletteData = new byte[0x80]{};
+	m_MMU = new byte[0x10000]();
+	m_Cartridge = new byte[0x800000]();
+	m_CartridgeRAM = new byte[0x20000]();
+	m_VRAM = new byte[0x4000]();
+	m_WRAM = new byte[0x8000]();
+	m_PaletteData = new byte[0x80]();
 
 	LoadRAM();
 	

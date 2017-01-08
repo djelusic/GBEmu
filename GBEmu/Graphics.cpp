@@ -263,7 +263,7 @@ Color Graphics::GetColor(int colorId, byte bgAttrs, bool isObj, byte objAttrs) {
 		word paletteAddr = 0xFF47;
 		if (isObj) paletteAddr = (objAttrs & (1 << 4)) ? 0xFF49 : 0xFF48;
 		byte paletteData = MMU.ReadByte(paletteAddr);
-		byte palette[4]{
+		byte palette[4] = {
 			paletteData & 3,
 			(paletteData >> 2) & 3,
 			(paletteData >> 4) & 3,
