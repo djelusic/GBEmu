@@ -23,7 +23,7 @@ private:
 public:
 
   Timers(CPU &Cpu, Memory &MMU);
-  
+
   void Update(int cycles);
   bool TimerEnabled();
   void SetUpdateFrequency();

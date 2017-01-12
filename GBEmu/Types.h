@@ -7,7 +7,7 @@ typedef uint16_t word;
 typedef int16_t sword;
 
 struct Color {
-	byte R;
-	byte G;
-	byte B;
+  byte R;
+  byte G;
+  byte B;
 };

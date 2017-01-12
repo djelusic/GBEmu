@@ -9,43 +9,43 @@ Controller::Controller(GB *gb) : gb(gb) {
 }
 
 bool Controller::HandleInput() {
-    const Uint8 *keys = SDL_GetKeyboardState(NULL);
-    byte newDpad = 0;
-    byte newButtons = 0;
+  const Uint8 *keys = SDL_GetKeyboardState(NULL);
+  byte newDpad = 0;
+  byte newButtons = 0;
 
-    if(keys[SDL_SCANCODE_W]) {
-        newDpad |= (1 << 2);
-    }
-    if(keys[SDL_SCANCODE_A]) {
-        newDpad |= (1 << 1);
-    }
-    if(keys[SDL_SCANCODE_S]) {
-        newDpad |= (1 << 3);
-    }
-    if(keys[SDL_SCANCODE_D]) {
-        newDpad |= (1 << 0);
-    }
-    if(keys[SDL_SCANCODE_K]) {
-        newButtons |= (1 << 3);
-    }
-    if(keys[SDL_SCANCODE_L]) {
-        newButtons |= (1 << 2);
-    }
-    if(keys[SDL_SCANCODE_N]) {
-        newButtons |= (1 << 1);
-    }
-    if(keys[SDL_SCANCODE_M]) {
-        newButtons |= (1 << 0);
-    }
-	if (keys[SDL_SCANCODE_SPACE]) {
-		gb->ToggleFrameLimit();
-	}
-    // Check if input has changed
-    bool inputChanged = (dpadSelected && (dpad ^ newDpad)) || (buttonsSelected && (buttons ^ newButtons));
-    dpad = newDpad;
-    buttons = newButtons;
+  if (keys[SDL_SCANCODE_W]) {
+    newDpad |= (1 << 2);
+  }
+  if (keys[SDL_SCANCODE_A]) {
+    newDpad |= (1 << 1);
+  }
+  if (keys[SDL_SCANCODE_S]) {
+    newDpad |= (1 << 3);
+  }
+  if (keys[SDL_SCANCODE_D]) {
+    newDpad |= (1 << 0);
+  }
+  if (keys[SDL_SCANCODE_K]) {
+    newButtons |= (1 << 3);
+  }
+  if (keys[SDL_SCANCODE_L]) {
+    newButtons |= (1 << 2);
+  }
+  if (keys[SDL_SCANCODE_N]) {
+    newButtons |= (1 << 1);
+  }
+  if (keys[SDL_SCANCODE_M]) {
+    newButtons |= (1 << 0);
+  }
+  if (keys[SDL_SCANCODE_SPACE]) {
+    gb->ToggleFrameLimit();
+  }
+  // Check if input has changed
+  bool inputChanged = (dpadSelected && (dpad ^ newDpad)) || (buttonsSelected && (buttons ^ newButtons));
+  dpad = newDpad;
+  buttons = newButtons;
 
-    return inputChanged;
+  return inputChanged;
 }
 
 void Controller::SelectInput(const byte & val) {

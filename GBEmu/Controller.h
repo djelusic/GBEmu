@@ -14,11 +14,11 @@ private:
   bool buttonsSelected;
   GB *gb;
 
-public: 
+public:
 
   Controller(GB *gb);
   bool HandleInput();
   void SelectInput(const byte & val);
   byte GetInput();
-  
+
 };

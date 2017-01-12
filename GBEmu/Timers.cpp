@@ -15,10 +15,10 @@ bool Timers::TimerEnabled() {
 void Timers::SetUpdateFrequency() {
   byte TMCFreq = MMU.ReadByte(TMC) & 0x3;
   switch (TMCFreq) {
-    case 0: cyclesUntilUpdate = 1024; break;
-    case 1: cyclesUntilUpdate = 16; break;
-    case 2: cyclesUntilUpdate = 64; break;
-    case 3: cyclesUntilUpdate = 256; break;
+  case 0: cyclesUntilUpdate = 1024; break;
+  case 1: cyclesUntilUpdate = 16; break;
+  case 2: cyclesUntilUpdate = 64; break;
+  case 3: cyclesUntilUpdate = 256; break;
   }
 }
 
