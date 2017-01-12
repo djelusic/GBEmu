@@ -9,11 +9,15 @@ Graphics::Graphics(GB *gb, Memory &MMU, CPU &Cpu) :
   gb(gb),
   currentCycles(0) {
     InitSDL();
+	for (int i = 0; i < 144; i++)
+		for (int j = 0; j < 160; j++)
+			for (int k = 0; k < 3; k++)
+				display[i][j][k] = 0xFF;
   }
 
 void Graphics::InitSDL() {
   SDL_Init(SDL_INIT_VIDEO);
-  window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_RESIZABLE);
+  window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED);
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
 }
@@ -36,34 +40,43 @@ void Graphics::Update(int cycles) {
     SetMode(0);
 	MMU.HandleHBlank();
     DrawScanline();
-    if (LCDStat & 0x8) Cpu.RequestInterrupt(1);
+	if (LCDStat & 0x8) {
+		Cpu.RequestInterrupt(1);
+	}
   }
   if (currentMode == 0 && currentCycles >= 456) {
-    currentCycles = 0;
-    MMU.WriteByteDirect(LY, currentScanline + 1);
-    if (currentScanline == 143) {
+    currentCycles -= 456;
+    MMU.WriteByteDirect(LY, ++currentScanline);
+    if (currentScanline == 144) {
       SetMode(1);
       Cpu.RequestInterrupt(0);
-      if (LCDStat & 0x10) Cpu.RequestInterrupt(1);
+	  if (LCDStat & 0x10) {
+		  Cpu.RequestInterrupt(1);
+	  }
       RenderScreen();
     }
     else {
       SetMode(2);
-      if (LCDStat & 0x20) Cpu.RequestInterrupt(1);
+	  if (LCDStat & 0x20) {
+		  Cpu.RequestInterrupt(1);
+	  }
     }
   }
   if (currentMode == 1 && currentCycles >= 456) {
-    currentCycles = 0;
-    MMU.WriteByteDirect(LY, currentScanline + 1);
-    if (currentScanline == 153) {
+	currentCycles -= 456;
+    MMU.WriteByteDirect(LY, ++currentScanline);
+    if (currentScanline == 154) {
       SetMode(2);
+	  currentScanline = 0;
       MMU.WriteByteDirect(LY, 0);
       if (LCDStat & 0x20) Cpu.RequestInterrupt(1);
     }
   }
   if (currentScanline == MMU.ReadByte(LYC)) {
     MMU.WriteByte(STAT, MMU.ReadByte(STAT) | 4);
-    if (LCDStat & 0x40) Cpu.RequestInterrupt(1);
+	if (LCDStat & 0x40) {
+		Cpu.RequestInterrupt(1);
+	}
   }
   else MMU.WriteByte(STAT, MMU.ReadByte(STAT) & ~4);
 }
@@ -132,7 +145,7 @@ void Graphics::DrawScanline() {
   bool backgroundEnabled = LCDControl & 1;
   bool windowEnabled = LCDControl & 0x20;
   bool spritesEnabled = LCDControl & 2;
-  DrawBackgroundTiles();
+  if (backgroundEnabled) DrawBackgroundTiles();
   if (windowEnabled) DrawWindowTiles();
   if (spritesEnabled) DrawSprites();
 }
