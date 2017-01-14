@@ -9,7 +9,7 @@ GB::GB(const char* rom_fname) :
   Cpu(this, MMU, controller),
   timers(Cpu, MMU),
   graphics(this, MMU, Cpu),
-  framerateUnlocked(true) {}
+  framerateUnlocked(false) {}
 
 void GB::AdvanceFrame() {
   currentCycles = 0;

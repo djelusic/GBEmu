@@ -27,6 +27,9 @@ void Graphics::Update(int cycles) {
   byte currentMode = LCDStat & 0x3;
   byte currentScanline = MMU.ReadByte(LY);
 
+  bool previousSTAT = STATInterrupt;
+  STATInterrupt = false;
+
   if (!LCDEnabled()) {
     SetMode(1);
     MMU.WriteByteDirect(LY, 0);
@@ -39,26 +42,25 @@ void Graphics::Update(int cycles) {
   if (currentMode == 3 && currentCycles >= 252) {
     SetMode(0);
     MMU.HandleHBlank();
-    DrawScanline();
     if (LCDStat & 0x8) {
-      Cpu.RequestInterrupt(1);
+      STATInterrupt = true;
     }
   }
   if (currentMode == 0 && currentCycles >= 456) {
     currentCycles -= 456;
+    DrawScanline();
     MMU.WriteByteDirect(LY, ++currentScanline);
     if (currentScanline == 144) {
       SetMode(1);
       Cpu.RequestInterrupt(0);
       if (LCDStat & 0x10) {
-        Cpu.RequestInterrupt(1);
+        STATInterrupt = true;
       }
-      RenderScreen();
     }
     else {
       SetMode(2);
       if (LCDStat & 0x20) {
-        Cpu.RequestInterrupt(1);
+        STATInterrupt = true;
       }
     }
   }
@@ -66,19 +68,26 @@ void Graphics::Update(int cycles) {
     currentCycles -= 456;
     MMU.WriteByteDirect(LY, ++currentScanline);
     if (currentScanline == 154) {
+      RenderScreen();
       SetMode(2);
       currentScanline = 0;
       MMU.WriteByteDirect(LY, 0);
-      if (LCDStat & 0x20) Cpu.RequestInterrupt(1);
+	    if (LCDStat & 0x20) {
+        STATInterrupt = true;
+	    }
     }
   }
   if (currentScanline == MMU.ReadByte(LYC)) {
     MMU.WriteByte(STAT, MMU.ReadByte(STAT) | 4);
     if (LCDStat & 0x40) {
-      Cpu.RequestInterrupt(1);
+      STATInterrupt = true;
     }
   }
   else MMU.WriteByte(STAT, MMU.ReadByte(STAT) & ~4);
+
+  if (STATInterrupt && !previousSTAT) {
+    Cpu.RequestInterrupt(1);
+  }
 }
 
 void Graphics::SetMode(int mode) {
@@ -86,6 +95,8 @@ void Graphics::SetMode(int mode) {
 }
 
 void Graphics::RenderScreen() {
+  std::cout << "LCDC: " << std::hex << (int)MMU.ReadByte(LCDC) << std::endl;
+  std::cout << "STAT: " << std::hex << (int)MMU.ReadByte(STAT) << std::endl;
   // SDL_PumpEvents();
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
@@ -180,6 +191,7 @@ void Graphics::DrawBackgroundTiles() {
     if (lineData1 & (1 << colorBit)) colorData |= 1;
     if (lineData2 & (1 << colorBit)) colorData |= 2;
     Color color = GetColor(colorData, tileAttrs, false, 0);
+    if (y < 0 || y >= 144 || x < 0 || x >= 160) return;
     display[y][x][0] = color.R;
     display[y][x][1] = color.G;
     display[y][x][2] = color.B;
@@ -218,6 +230,7 @@ void Graphics::DrawWindowTiles() {
     if (lineData1 & (1 << colorBit)) colorData |= 1;
     if (lineData2 & (1 << colorBit)) colorData |= 2;
     Color color = GetColor(colorData, tileAttrs, false, 0);
+    if (y < 0 || y >= 144 || x < 0 || x >= 160) return;
     display[y][x][0] = color.R;
     display[y][x][1] = color.G;
     display[y][x][2] = color.B;

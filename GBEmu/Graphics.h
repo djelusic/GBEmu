@@ -31,6 +31,8 @@ private:
   CPU &Cpu;
   GB *gb;
 
+  bool STATInterrupt = false;
+
   SDL_Window *window;
   SDL_Texture *texture;
   SDL_Renderer *renderer;

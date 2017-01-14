@@ -605,41 +605,39 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : MMU(MMU), controller(con
 }
 
 int CPU::Advance() {
-  if (halted) {
-    return NOP(0);
-  }
   int cycles = 0;
-  byte opcode = ReadByte();
-  if (opcode == 0xCB) {
-    opcode = ReadByte();
-    cycles += (this->*opCodeMapCB[opcode])(opcode);
+  if (!halted) {
+    byte opcode = ReadByte();
+    if (opcode == 0xCB) {
+      opcode = ReadByte();
+      cycles += (this->*opCodeMapCB[opcode])(opcode);
+    }
+    else if (opCodeMap[opcode] != nullptr) {
+      cycles += (this->*opCodeMap[opcode])(opcode);
+    }
   }
-  else if (opCodeMap[opcode] != nullptr) {
-    cycles += (this->*opCodeMap[opcode])(opcode);
-  }
+  else cycles = 4;
   cycles += HandleInterrupts();
   return cycles;
 }
 
 void CPU::RequestInterrupt(int id) {
-  halted = false;
   MMU.WriteByte(IF, MMU.ReadByte(IF) | (1 << id));
 }
 
 int CPU::HandleInterrupts() {
   byte requestedInterrupts = MMU.ReadByte(IF);
-  if (!interruptsEnabled || !requestedInterrupts) return 0;
   byte enabledInterrupts = MMU.ReadByte(IE);
+  byte interrupt = MMU.ReadByte(IF) & MMU.ReadByte(IE) & 0x1F;
+  if (interrupt) halted = false;
+  if (!interruptsEnabled || !interrupt) return 0;
   int interruptCycles = 0;
   for (int i = 0; i < 5; i++) {
-    if (requestedInterrupts & (1 << i) && enabledInterrupts & (1 << i)) {
+    if (interrupt & (1 << i)) {
       PerformInterrupt(i);
       interruptCycles += 20;
       break;
     }
-    /*else if (requestedInterrupts & (1 << i)) {
-      MMU.WriteByte(IF, MMU.ReadByte(IF) & ~(1 << i));
-    }*/
   }
   return interruptCycles;
 }
@@ -1376,6 +1374,10 @@ int CPU::NOP(const byte & op_code) {
 
 int CPU::HALT(const byte & op_code) {
   halted = true;
+  // TODO: Implement halt bug
+  //if (!interruptsEnabled && (MMU.ReadByte(IE) & MMU.ReadByte(IF) & 0x1F)) {
+  //  halted = false;
+  //}
   return 4;
 }
 
