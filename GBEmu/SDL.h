@@ -1,4 +1,5 @@
 #pragma once
+#include "Types.h"
 #include <SDL2/SDL.h>
 
 class GB;
@@ -17,6 +18,8 @@ private:
   Graphics &graphics;
   Controller &controller;
   Memory &MMU;
+
+  byte *pixels;
 
 public:
   SDL(GB *gb, Graphics &graphics, Controller &controller, Memory &MMU);

@@ -6,13 +6,12 @@
 #include <iostream>
 
 void Memory::LoadCartridge(const char* fname) {
-  std::ifstream input(fname, std::ios::binary);
-  std::vector<byte> buffer((
-    std::istreambuf_iterator<char>(input)),
-    (std::istreambuf_iterator<char>()));
-  int j = 0;
-  for (auto i = buffer.begin(); i != buffer.end(); i++, j++)
-    m_Cartridge[j] = (byte)*i;
+  std::ifstream fin(fname, std::ios::in | std::ios::binary);
+  fin.seekg(0, std::ios::end);
+  int length = fin.tellg();
+  fin.seekg(0, std::ios::beg);
+  fin.read((char*)m_Cartridge, length);
+  fin.close();
 }
 
 void Memory::ToggleRAMEnabled(const word& address, const byte & val) {
@@ -192,6 +191,9 @@ byte Memory::ReadByte(const word& address) {
   }
   if (address == 0xFF00) {
     return controller.GetInput();
+  }
+  if (address == 0xFF4D) {
+    auto test = 1;
   }
   if (address == 0xFF69 && gb->CGBModeEnabled()) {
     byte index = m_MMU[0xFF68] & 0x3F;

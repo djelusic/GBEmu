@@ -45,7 +45,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0x0F] = &CPU::RRCA;
 
   // 10
-  opCodeMap[0x10] = &CPU::HALT;
+  opCodeMap[0x10] = &CPU::STOP;
   opCodeMap[0x11] = &CPU::LD_DE_nn;
   opCodeMap[0x12] = &CPU::LD_DEm_A;
   opCodeMap[0x13] = &CPU::INC_DE;
