@@ -2,8 +2,11 @@
 #include "Memory.h"
 #include "Controller.h"
 #include "GB.h"
+#include "SDL.h"
 
-CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : MMU(MMU), controller(controller) {
+CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : 
+  MMU(MMU), 
+  controller(controller) {
   registers[0] = 0x0; // B
   registers[1] = 0x13; // C
   registers[2] = 0x0; // D
@@ -626,8 +629,6 @@ void CPU::RequestInterrupt(int id) {
 }
 
 int CPU::HandleInterrupts() {
-  byte requestedInterrupts = MMU.ReadByte(IF);
-  byte enabledInterrupts = MMU.ReadByte(IE);
   byte interrupt = MMU.ReadByte(IF) & MMU.ReadByte(IE) & 0x1F;
   if (interrupt) halted = false;
   if (!interruptsEnabled || !interrupt) return 0;
@@ -642,8 +643,12 @@ int CPU::HandleInterrupts() {
   return interruptCycles;
 }
 
+void CPU::SetInputCallback(std::function<bool(void)> cb) {
+  inputCallback = cb;
+}
+
 void CPU::HandleInput() {
-  if (controller.HandleInput()) {
+  if (inputCallback != nullptr && inputCallback()) {
     RequestInterrupt(4);
   }
 }

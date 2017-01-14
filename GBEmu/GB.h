@@ -4,6 +4,7 @@
 #include "Timers.h"
 #include "Graphics.h"
 #include "Controller.h"
+#include "SDL.h"
 
 #define CYCLES_PER_FRAME 70224
 #define TIME_PER_FRAME 1.0 / 60.0
@@ -18,6 +19,7 @@ private:
   CPU Cpu;
   Timers timers;
   Graphics graphics;
+  SDL sdl;
   bool CGBMode;
   bool framerateUnlocked;
 

@@ -36,6 +36,9 @@
     <ClInclude Include="Timers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SDL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Memory.cpp">
@@ -57,6 +60,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SDL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

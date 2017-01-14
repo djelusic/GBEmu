@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include <functional>
 
 #define CLOCK_SPEED 4194304
 
@@ -14,6 +15,7 @@
 class Memory;
 class Controller;
 class GB;
+class SDL;
 
 class CPU {
 
@@ -32,6 +34,8 @@ private:
   opCode opCodeMap[0xFF + 1];
   opCode opCodeMapCB[0xFF + 1];
 
+  std::function<bool(void)> inputCallback;
+
 public:
 
   CPU(GB *gb, Memory &MMU, Controller &controller);
@@ -39,6 +43,7 @@ public:
   int Advance();
   void RequestInterrupt(int id);
   int HandleInterrupts();
+  void SetInputCallback(std::function<bool(void)> cb);
   void HandleInput();
 
 private:

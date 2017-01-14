@@ -8,18 +8,13 @@ Graphics::Graphics(GB *gb, Memory &MMU, CPU &Cpu) :
   Cpu(Cpu),
   gb(gb),
   currentCycles(0) {
-  InitSDL();
-  for (int i = 0; i < 144; i++)
-    for (int j = 0; j < 160; j++)
-      for (int k = 0; k < 3; k++)
-        display[i][j][k] = 0xFF;
+  display = new byte[144 * 160 * 4];
+  for (int i = 0; i < 144 * 160 * 4; i++)
+    display[i] = 0xFF;
 }
 
-void Graphics::InitSDL() {
-  SDL_Init(SDL_INIT_VIDEO);
-  window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
-  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
+Graphics::~Graphics() {
+  delete[] display;
 }
 
 void Graphics::Update(int cycles) {
@@ -68,7 +63,7 @@ void Graphics::Update(int cycles) {
     currentCycles -= 456;
     MMU.WriteByteDirect(LY, ++currentScanline);
     if (currentScanline == 154) {
-      RenderScreen();
+      if (vBlankCallback != nullptr) vBlankCallback();
       SetMode(2);
       currentScanline = 0;
       MMU.WriteByteDirect(LY, 0);
@@ -92,59 +87,6 @@ void Graphics::Update(int cycles) {
 
 void Graphics::SetMode(int mode) {
   MMU.WriteByte(STAT, (MMU.ReadByte(STAT) & 0xFC) | mode);
-}
-
-void Graphics::RenderScreen() {
-  std::cout << "LCDC: " << std::hex << (int)MMU.ReadByte(LCDC) << std::endl;
-  std::cout << "STAT: " << std::hex << (int)MMU.ReadByte(STAT) << std::endl;
-  // SDL_PumpEvents();
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  SDL_RenderClear(renderer);
-
-  byte* pixels = new byte[160 * 144 * 4];
-
-  int pitch = 0;
-  SDL_LockTexture(texture, nullptr, (void**)&pixels, &pitch);
-
-  for (int i = 0; i < 144; i++) {
-    for (int j = 0; j < 160; j++) {
-      int idx = i * 160 * 4 + j * 4;
-      pixels[idx] = 0xFF;
-      pixels[idx + 1] = display[i][j][0];
-      pixels[idx + 2] = display[i][j][1];
-      pixels[idx + 3] = display[i][j][2];
-      // if (display[i][j][0] == 255 || display[i][j][0] == 200 || display[i][j][0] == 100) std::cout << '-';
-      // else std::cout << 0;
-    }
-    // std::cout << std::endl;
-  }
-  // std::cout << std::endl;
-
-  //for (int i = 0x9A60; i < 0x9A6A; i++) {
-  //  std::cout << std::hex << (int)MMU.ReadByte(i);
-  //}
-  //std::cout << std::endl << std::endl;
-
-  //for (int i = 0x8F10; i < 0x8F20; i++) {
-  //  std::cout << std::bitset<8>(MMU.ReadByte(i));
-  //  if (i % 2 == 1) std::cout << std::endl;
-  //}
-  /*std::cout << std::endl << std::endl;
-
-  std::cout << "Sprite palette 1: " << std::hex << (int)MMU.ReadByte(0xFF48) << std::endl;
-  std::cout << "Sprite palette 2: " << std::hex << (int)MMU.ReadByte(0xFF49) << std::endl;
-
-  for (int i = 0xFE00; i < 0xFEA0; i++) {
-    if (i % 4 == 0) std::cout << " ";
-    if (i % 32 == 0) std::cout << std::endl;
-    std::cout << std::setfill('0') << std::setw(2) << std::hex << (int)(MMU.ReadByte(i));
-  }
-  std::cout << std::endl << std::endl;*/
-
-  SDL_UnlockTexture(texture);
-  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-
-  SDL_RenderPresent(renderer);
 }
 
 bool Graphics::LCDEnabled() {
@@ -192,9 +134,11 @@ void Graphics::DrawBackgroundTiles() {
     if (lineData2 & (1 << colorBit)) colorData |= 2;
     Color color = GetColor(colorData, tileAttrs, false, 0);
     if (y < 0 || y >= 144 || x < 0 || x >= 160) return;
-    display[y][x][0] = color.R;
-    display[y][x][1] = color.G;
-    display[y][x][2] = color.B;
+    int idx = y * 160 * 4 + x * 4;
+    display[idx + 0] = 0xFF;
+    display[idx + 1] = color.R;
+    display[idx + 2] = color.G;
+    display[idx + 3] = color.B;
   }
 }
 
@@ -231,9 +175,11 @@ void Graphics::DrawWindowTiles() {
     if (lineData2 & (1 << colorBit)) colorData |= 2;
     Color color = GetColor(colorData, tileAttrs, false, 0);
     if (y < 0 || y >= 144 || x < 0 || x >= 160) return;
-    display[y][x][0] = color.R;
-    display[y][x][1] = color.G;
-    display[y][x][2] = color.B;
+    int idx = y * 160 * 4 + x * 4;
+    display[idx + 0] = 0xFF;
+    display[idx + 1] = color.R;
+    display[idx + 2] = color.G;
+    display[idx + 3] = color.B;
   }
 }
 
@@ -275,9 +221,11 @@ void Graphics::DrawSprites() {
       byte LCDControl = MMU.ReadByte(LCDC);
       bool spriteMasterPriority = gb->CGBModeEnabled() && !(LCDControl & 1);
       if (!(attrs & (1 << 7)) || spriteMasterPriority) {
-        display[currentScanline][xFinal][0] = color.R;
-        display[currentScanline][xFinal][1] = color.G;
-        display[currentScanline][xFinal][2] = color.B;
+        int idx = currentScanline * 160 * 4 + xFinal * 4;
+        display[idx + 0] = 0xFF;
+        display[idx + 1] = color.R;
+        display[idx + 2] = color.G;
+        display[idx + 3] = color.B;
       }
     }
   }
@@ -316,15 +264,10 @@ Color Graphics::GetColor(int colorId, byte bgAttrs, bool isObj, byte objAttrs) {
   return result;
 }
 
-void Graphics::HandleSDLEvents() {
-  SDL_Event event;
-  while (SDL_PollEvent(&event) != 0) {
-    if (event.type == SDL_QUIT) {
-      SDL_DestroyTexture(texture);
-      SDL_DestroyRenderer(renderer);
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      MMU.SaveRAM();
-    }
-  }
+byte* Graphics::GetDisplayPixels() {
+  return display;
+}
+
+void Graphics::SetVblankCallback(std::function<void(void)> cb) {
+  vBlankCallback = cb;
 }

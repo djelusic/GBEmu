@@ -1,7 +1,7 @@
 #pragma once
 #include "Types.h"
 #include <iomanip>
-#include <SDL2/SDL.h>
+#include <functional>
 
 #define CYCLES_PER_SCANLINE 456
 #define LCDC 0xFF40
@@ -26,27 +26,25 @@ class Graphics {
 private:
 
   int currentCycles;
-  byte display[144][160][3];
+  byte* display;
   Memory &MMU;
   CPU &Cpu;
   GB *gb;
 
   bool STATInterrupt = false;
 
-  SDL_Window *window;
-  SDL_Texture *texture;
-  SDL_Renderer *renderer;
+  std::function<void(void)> vBlankCallback;
 
 public:
 
   Graphics(GB *gb, Memory &MMU, CPU &Cpu);
+  ~Graphics();
   void Update(int cycles);
-  void RenderScreen();
-  void HandleSDLEvents();
+  byte* GetDisplayPixels();
+  void SetVblankCallback(std::function<void(void)> cb);
 
 private:
 
-  void InitSDL();
   bool LCDEnabled();
   void SetMode(int mode);
   void DrawScanline();

@@ -17,7 +17,7 @@ private:
 public:
 
   Controller(GB *gb);
-  bool HandleInput();
+  bool OnNewInput(const byte & newDpad, const byte & newButtons);
   void SelectInput(const byte & val);
   byte GetInput();
 

@@ -2,6 +2,7 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
+#include <functional>
 
 GB::GB(const char* rom_fname) :
   controller(this),
@@ -9,7 +10,11 @@ GB::GB(const char* rom_fname) :
   Cpu(this, MMU, controller),
   timers(Cpu, MMU),
   graphics(this, MMU, Cpu),
-  framerateUnlocked(false) {}
+  sdl(this, graphics, controller, MMU),
+  framerateUnlocked(false) {
+  Cpu.SetInputCallback(std::bind(&SDL::HandleInput, &sdl));
+  graphics.SetVblankCallback(std::bind(&SDL::RenderScreen, &sdl));
+}
 
 void GB::AdvanceFrame() {
   currentCycles = 0;
@@ -24,7 +29,7 @@ void GB::AdvanceFrame() {
 
 void GB::Run() {
   while (true) {
-    graphics.HandleSDLEvents();
+    sdl.HandleEvents();
     clock_t begin = clock();
     AdvanceFrame();
     clock_t end = clock();
