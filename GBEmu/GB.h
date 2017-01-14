@@ -22,6 +22,7 @@ private:
   SDL sdl;
   bool CGBMode;
   bool framerateUnlocked;
+  bool doubleSpeed;
 
 public:
 
@@ -30,6 +31,8 @@ public:
   void SetCGBMode(bool val);
   bool CGBModeEnabled();
   void ToggleFrameLimit();
+  void SetDoubleSpeed(bool val);
+  bool IsDoubleSpeed();
 
 private:
 

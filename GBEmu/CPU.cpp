@@ -5,6 +5,7 @@
 #include "SDL.h"
 
 CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : 
+  gb(gb),
   MMU(MMU), 
   controller(controller) {
   registers[0] = 0x0; // B
@@ -24,6 +25,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   PC = 0x100;
 
   halted = false;
+  stopped = false;
   interruptsEnabled = true;
 
   // 00
@@ -609,7 +611,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
 
 int CPU::Advance() {
   int cycles = 0;
-  if (!halted) {
+  if (!halted && !stopped) {
     byte opcode = ReadByte();
     if (opcode == 0xCB) {
       opcode = ReadByte();
@@ -1387,7 +1389,14 @@ int CPU::HALT(const byte & op_code) {
 }
 
 int CPU::STOP(const byte & op_code) {
-  return 0;
+  if (MMU.ReadByte(0xFF4D) & 1) {
+    gb->SetDoubleSpeed(!(gb->IsDoubleSpeed()));
+    MMU.WriteByte(0xFF4D, gb->IsDoubleSpeed() ? 0x80 : 0);
+  }
+  else {
+    stopped = true;
+  }
+  return 4;
 }
 
 int CPU::DI(const byte & op_code) {

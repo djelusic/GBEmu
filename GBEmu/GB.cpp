@@ -11,7 +11,8 @@ GB::GB(const char* rom_fname) :
   timers(Cpu, MMU),
   graphics(this, MMU, Cpu),
   sdl(this, graphics, controller, MMU),
-  framerateUnlocked(false) {
+  framerateUnlocked(false),
+  doubleSpeed(false) {
   Cpu.SetInputCallback([this](void) -> bool {return sdl.HandleInput();});
   graphics.SetVblankCallback([this](void) -> void {sdl.RenderScreen();});
 }
@@ -22,6 +23,7 @@ void GB::AdvanceFrame() {
     Cpu.HandleInput();
     int cycles = Cpu.Advance();
     timers.Update(cycles);
+    if (doubleSpeed) cycles /= 2;
     graphics.Update(cycles);
     currentCycles += cycles;
   }
@@ -55,4 +57,12 @@ bool GB::CGBModeEnabled() {
 
 void GB::ToggleFrameLimit() {
   framerateUnlocked = !framerateUnlocked;
+}
+
+void GB::SetDoubleSpeed(bool val) {
+  doubleSpeed = val;
+}
+
+bool GB::IsDoubleSpeed() {
+  return doubleSpeed;
 }

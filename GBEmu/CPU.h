@@ -26,8 +26,10 @@ private:
   word PC;
   Memory &MMU;
   Controller &controller;
+  GB *gb;
 
   bool halted;
+  bool stopped;
   bool interruptsEnabled;
 
   typedef int(CPU::*opCode)(const byte & op_code);
