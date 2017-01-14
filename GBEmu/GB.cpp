@@ -12,8 +12,8 @@ GB::GB(const char* rom_fname) :
   graphics(this, MMU, Cpu),
   sdl(this, graphics, controller, MMU),
   framerateUnlocked(false) {
-  Cpu.SetInputCallback(std::bind(&SDL::HandleInput, &sdl));
-  graphics.SetVblankCallback(std::bind(&SDL::RenderScreen, &sdl));
+  Cpu.SetInputCallback([this](void) -> bool {return sdl.HandleInput();});
+  graphics.SetVblankCallback([this](void) -> void {sdl.RenderScreen();});
 }
 
 void GB::AdvanceFrame() {

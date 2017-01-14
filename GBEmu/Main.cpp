@@ -2,7 +2,7 @@
 
 int main(int argc, char ** argv) {
   // GB gb(argv[1]);
-  GB gb("pokemon_gold.gbc");
+  GB gb("test_roms/pokemon.gb");
   gb.Run();
   return 0;
 }

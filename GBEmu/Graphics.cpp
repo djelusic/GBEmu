@@ -195,7 +195,7 @@ void Graphics::DrawSprites() {
     int spriteSize = (MMU.ReadByte(LCDC) & (1 << 2)) ? 16 : 8;
     if (currentScanline < y || currentScanline >= y + spriteSize) continue;
     int line = currentScanline - y;
-    if (attrs & (1 << 6)) line = spriteSize - line;
+    if (attrs & (1 << 6)) line = spriteSize - 1 - line;
     if (spriteSize == 16) tileId &= 0xFE;
     int tileBankNumber = (attrs & (1 << 3)) ? 1 : 0;
 
