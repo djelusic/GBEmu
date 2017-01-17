@@ -17,7 +17,7 @@ class Controller;
 class GB;
 class SDL;
 
-class CPU {
+class CPU : Serializable {
 
 private:
 
@@ -47,6 +47,9 @@ public:
   int HandleInterrupts();
   void SetInputCallback(std::function<bool(void)> cb);
   void HandleInput();
+
+  void Serialize(const Serializer &s);
+  void Deserialize(const Serializer &s);
 
 private:
 

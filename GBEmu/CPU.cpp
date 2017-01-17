@@ -655,6 +655,12 @@ void CPU::HandleInput() {
   }
 }
 
+void CPU::Serialize(const Serializer & s) {
+}
+
+void CPU::Deserialize(const Serializer & s) {
+}
+
 void CPU::PerformInterrupt(int id) {
   interruptsEnabled = false;
   MMU.WriteByte(IF, (MMU.ReadByte(IF) & ~(1 << id)));

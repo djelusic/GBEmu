@@ -59,14 +59,14 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 }
 
 void Memory::SaveRAM() {
-  std::ofstream fout("title.sav", std::ios::out | std::ios::binary);
+  std::ofstream fout("test_roms/title.sav", std::ios::out | std::ios::binary);
   int size = sizeof(m_CartridgeRAM);
   fout.write((char*)m_CartridgeRAM, 0x20000);
   fout.close();
 }
 
 void Memory::LoadRAM() {
-  std::ifstream fin("title.sav", std::ios::in | std::ios::binary);
+  std::ifstream fin("test_roms/title.sav", std::ios::in | std::ios::binary);
   fin.seekg(0, std::ios::end);
   int length = fin.tellg();
   fin.seekg(0, std::ios::beg);
@@ -191,9 +191,6 @@ byte Memory::ReadByte(const word& address) {
   }
   if (address == 0xFF00) {
     return controller.GetInput();
-  }
-  if (address == 0xFF4D) {
-    auto test = 1;
   }
   if (address == 0xFF69 && gb->CGBModeEnabled()) {
     byte index = m_MMU[0xFF68] & 0x3F;

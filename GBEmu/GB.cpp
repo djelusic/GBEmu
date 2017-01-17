@@ -20,13 +20,13 @@ GB::GB(const char* rom_fname) :
 void GB::AdvanceFrame() {
   currentCycles = 0;
   while (currentCycles < CYCLES_PER_FRAME) {
-    Cpu.HandleInput();
     int cycles = Cpu.Advance();
     timers.Update(cycles);
     if (doubleSpeed) cycles /= 2;
     graphics.Update(cycles);
     currentCycles += cycles;
   }
+  Cpu.HandleInput();
 }
 
 void GB::Run() {
