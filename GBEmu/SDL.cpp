@@ -14,20 +14,18 @@ SDL::SDL(GB *gb, Graphics & graphics, Controller & controller, Memory &MMU) :
 	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
-  pixels = new byte[160 * 144 * 4];
 }
 
 SDL::~SDL() {
-  delete[] pixels;
 }
 
 void SDL::RenderScreen() {
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
   byte* display = graphics.GetDisplayPixels();
-
+  void *pixels;
   int pitch = 0;
-  SDL_LockTexture(texture, nullptr, (void**)&pixels, &pitch);
+  SDL_LockTexture(texture, nullptr, &pixels, &pitch);
 
   memcpy(pixels, display, 160 * 144 * 4);
 

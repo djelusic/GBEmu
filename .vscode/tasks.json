@@ -1,0 +1,23 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "0.1.0",
+  "command": "g++",
+  "isShellCommand": true,
+  "showOutput": "always",
+  "args": [
+    "-g", 
+    "GBEmu/Main.cpp", 
+    "GBEmu/CPU.cpp", 
+    "GBEmu/Memory.cpp", 
+    "GBEmu/GB.cpp", 
+    "GBEmu/Timers.cpp", 
+    "GBEmu/Graphics.cpp", 
+    "GBEmu/Controller.cpp",
+    "GBEmu/SDL.cpp",
+    "-o", 
+    "emu",
+    "-lSDL2",
+    "-std=c++0x"
+  ]
+}

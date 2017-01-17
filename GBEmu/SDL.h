@@ -19,8 +19,6 @@ private:
   Controller &controller;
   Memory &MMU;
 
-  byte *pixels;
-
 public:
   SDL(GB *gb, Graphics &graphics, Controller &controller, Memory &MMU);
   ~SDL();

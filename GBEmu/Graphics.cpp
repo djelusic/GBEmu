@@ -238,10 +238,10 @@ Color Graphics::GetColor(int colorId, byte bgAttrs, bool isObj, byte objAttrs) {
     if (isObj) paletteAddr = (objAttrs & (1 << 4)) ? 0xFF49 : 0xFF48;
     byte paletteData = MMU.ReadByte(paletteAddr);
     byte palette[4] = {
-      paletteData & 3,
-      (paletteData >> 2) & 3,
-      (paletteData >> 4) & 3,
-      (paletteData >> 6) & 3
+      static_cast<byte>(paletteData & 3),
+      static_cast<byte>((paletteData >> 2) & 3),
+      static_cast<byte>((paletteData >> 4) & 3),
+      static_cast<byte>((paletteData >> 6) & 3)
     };
     switch (palette[colorId]) {
     case 0: result.R = 255; result.G = 255; result.B = 255; break;
