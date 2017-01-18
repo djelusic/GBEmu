@@ -15,9 +15,11 @@
     "GBEmu/Graphics.cpp", 
     "GBEmu/Controller.cpp",
     "GBEmu/SDL.cpp",
+    "GBEmu/Serializer.cpp",
     "-o", 
     "emu",
     "-lSDL2",
-    "-std=c++0x"
+    "-std=c++0x",
+    "-Wno-shift-count-overflow"
   ]
 }
