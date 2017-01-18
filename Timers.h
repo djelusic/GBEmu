@@ -7,6 +7,7 @@
 
 class CPU;
 class Memory;
+class Serializer;
 
 class Timers {
 
@@ -27,6 +28,9 @@ public:
   void Update(int cycles);
   bool TimerEnabled();
   void SetUpdateFrequency();
+
+  void Serialize(Serializer & s);
+  void Deserialize(Serializer & s);
 
 private:
 

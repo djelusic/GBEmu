@@ -1,8 +1,7 @@
 #include "Memory.h"
 #include "GB.h"
+#include "Serializer.h"
 #include <fstream>
-#include <iterator>
-#include <vector>
 #include <iostream>
 
 void Memory::LoadCartridge(const char* fname) {
@@ -60,7 +59,6 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 
 void Memory::SaveRAM() {
   std::ofstream fout("test_roms/title.sav", std::ios::out | std::ios::binary);
-  int size = sizeof(m_CartridgeRAM);
   fout.write((char*)m_CartridgeRAM, 0x20000);
   fout.close();
 }
@@ -162,6 +160,40 @@ Memory::~Memory() {
   delete[] m_VRAM;
   delete[] m_WRAM;
   delete[] m_PaletteData;
+}
+
+void Memory::Serialize(Serializer &s) {
+  s.SerializeArray<byte>(m_MMU, 0x10000);
+  s.SerializeArray<byte>(m_VRAM, 0x4000);
+  s.SerializeArray<byte>(m_WRAM, 0x8000);
+  s.SerializeArray<byte>(m_PaletteData, 0x80);
+  s.Serialize<int>(currentROMBank);
+  s.Serialize<byte>(currentRAMBank);
+  s.Serialize<byte>(currentWRAMBank);
+  s.Serialize<bool>(ramEnabled);
+  s.Serialize<bool>(ramBankingMode);
+  s.Serialize<byte>(MBCMode);
+  s.Serialize<bool>(HDMAActive);
+  s.Serialize<word>(HDMASrc);
+  s.Serialize<word>(HDMADest);
+  s.Serialize<int>(HDMALength);
+}
+
+void Memory::Deserialize(Serializer &s) {
+  s.DeserializeArray<byte>(m_MMU, 0x10000);
+  s.DeserializeArray<byte>(m_VRAM, 0x4000);
+  s.DeserializeArray<byte>(m_WRAM, 0x8000);
+  s.DeserializeArray<byte>(m_PaletteData, 0x80);
+  currentROMBank = s.Deserialize<int>();
+  currentRAMBank = s.Deserialize<byte>();
+  currentWRAMBank = s.Deserialize<byte>();
+  ramEnabled = s.Deserialize<bool>();
+  ramBankingMode = s.Deserialize<bool>();
+  MBCMode = s.Deserialize<byte>();
+  HDMAActive = s.Deserialize<bool>();
+  HDMASrc = s.Deserialize<word>();
+  HDMADest = s.Deserialize<word>();
+  HDMALength = s.Deserialize<int>();
 }
 
 byte Memory::ReadByte(const word& address) {

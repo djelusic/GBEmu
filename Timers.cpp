@@ -1,6 +1,7 @@
 #include "Timers.h"
 #include "CPU.h"
 #include "Memory.h"
+#include "Serializer.h"
 
 Timers::Timers(CPU &Cpu, Memory &MMU) : Cpu(Cpu), MMU(MMU) {
   SetUpdateFrequency();
@@ -20,6 +21,18 @@ void Timers::SetUpdateFrequency() {
   case 2: cyclesUntilUpdate = 64; break;
   case 3: cyclesUntilUpdate = 256; break;
   }
+}
+
+void Timers::Serialize(Serializer & s) {
+  s.Serialize<int>(cyclesUntilUpdate);
+  s.Serialize<int>(currentCycles);
+  s.Serialize<int>(currentCyclesDR);
+}
+
+void Timers::Deserialize(Serializer & s) {
+  cyclesUntilUpdate = s.Deserialize<int>();
+  currentCycles = s.Deserialize<int>();
+  currentCyclesDR = s.Deserialize<int>();
 }
 
 void Timers::Update(int cycles) {

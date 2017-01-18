@@ -19,10 +19,12 @@ private:
   Controller &controller;
   Memory &MMU;
 
+  bool quit;
+
 public:
   SDL(GB *gb, Graphics &graphics, Controller &controller, Memory &MMU);
-  ~SDL();
   void RenderScreen();
   bool HandleInput();
   void HandleEvents();
+  void UpdateFPS(int fps);
 };

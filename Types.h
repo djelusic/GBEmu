@@ -11,10 +11,3 @@ struct Color {
   byte G;
   byte B;
 };
-
-class Serializer;
-
-struct Serializable {
-  virtual void Serialize(const Serializer &s) = 0;
-  virtual void Deserialize(const Serializer &s) = 0;
-};

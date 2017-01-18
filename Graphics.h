@@ -20,6 +20,7 @@
 class Memory;
 class CPU;
 class GB;
+class Serializer;
 
 class Graphics {
 
@@ -42,6 +43,9 @@ public:
   void Update(int cycles);
   byte* GetDisplayPixels();
   void SetVblankCallback(std::function<void(void)> cb);
+
+  void Serialize(Serializer & s);
+  void Deserialize(Serializer & s);
 
 private:
 

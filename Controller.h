@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 
 class GB;
+class Serializer;
 
 class Controller {
 
@@ -15,6 +16,9 @@ private:
   GB *gb;
 
 public:
+
+  void Serialize(Serializer & s);
+  void Deserialize(Serializer & s);
 
   Controller(GB *gb);
   bool OnNewInput(const byte & newDpad, const byte & newButtons);

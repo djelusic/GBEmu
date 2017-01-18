@@ -75,6 +75,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\Daniel\Documents\Visual Studio 2015\Projects\GBEmu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\Users\Daniel\Documents\Visual Studio 2015\Projects\GBEmu\SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

@@ -4,22 +4,22 @@
 #include "Controller.h"
 #include "Memory.h"
 #include <iostream>
+#include <string>
 
 SDL::SDL(GB *gb, Graphics & graphics, Controller & controller, Memory &MMU) :
   gb(gb),
   graphics(graphics),
   controller(controller),
-  MMU(MMU) {
+  MMU(MMU),
+  quit(false) {
 	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
 }
 
-SDL::~SDL() {
-}
-
 void SDL::RenderScreen() {
+  if (quit) return;
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
   byte* display = graphics.GetDisplayPixels();
@@ -64,9 +64,6 @@ bool SDL::HandleInput() {
   if (keys[SDL_SCANCODE_M]) {
     newButtons |= (1 << 0);
   }
-  if (keys[SDL_SCANCODE_SPACE]) {
-    gb->ToggleFrameLimit();
-  }
   return controller.OnNewInput(newDpad, newButtons);
 }
 
@@ -74,11 +71,27 @@ void SDL::HandleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
     if (event.type == SDL_QUIT) {
+      quit = true;
       SDL_DestroyTexture(texture);
       SDL_DestroyRenderer(renderer);
       SDL_DestroyWindow(window);
       SDL_Quit();
       MMU.SaveRAM();
     }
+    if (event.type == SDL_KEYDOWN) {
+      if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+        gb->ToggleFrameLimit();
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_F1) {
+        gb->SaveState("test.state");
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
+        gb->LoadState("test.state");
+      }
+    }
   }
+}
+
+void SDL::UpdateFPS(int fps) {
+  SDL_SetWindowTitle(window, ("GBEmu " + std::to_string(fps)).c_str());
 }

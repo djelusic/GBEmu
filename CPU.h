@@ -16,8 +16,9 @@ class Memory;
 class Controller;
 class GB;
 class SDL;
+class Serializer;
 
-class CPU : Serializable {
+class CPU {
 
 private:
 
@@ -48,8 +49,8 @@ public:
   void SetInputCallback(std::function<bool(void)> cb);
   void HandleInput();
 
-  void Serialize(const Serializer &s);
-  void Deserialize(const Serializer &s);
+  void Serialize(Serializer &s);
+  void Deserialize(Serializer &s);
 
 private:
 

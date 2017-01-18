@@ -5,6 +5,7 @@
 #include <fstream>
 
 class GB;
+class Serializer;
 
 class Memory {
 
@@ -41,6 +42,9 @@ private:
 public:
   Memory(GB *gb, const char* rom_fname, Controller &controller);
   ~Memory();
+
+  void Serialize(Serializer & s);
+  void Deserialize(Serializer & s);
 
   byte ReadByte(const word& address);
   word ReadWord(const word& address);

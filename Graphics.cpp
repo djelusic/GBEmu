@@ -2,6 +2,7 @@
 #include "Memory.h"
 #include "CPU.h"
 #include "GB.h"
+#include "Serializer.h"
 
 Graphics::Graphics(GB *gb, Memory &MMU, CPU &Cpu) :
   MMU(MMU),
@@ -270,4 +271,14 @@ byte* Graphics::GetDisplayPixels() {
 
 void Graphics::SetVblankCallback(std::function<void(void)> cb) {
   vBlankCallback = cb;
+}
+
+void Graphics::Serialize(Serializer & s) {
+  s.Serialize<int>(currentCycles);
+  s.Serialize<bool>(STATInterrupt);
+}
+
+void Graphics::Deserialize(Serializer & s) {
+  currentCycles = s.Deserialize<int>();
+  STATInterrupt = s.Deserialize<bool>();
 }

@@ -3,6 +3,7 @@
 #include "Controller.h"
 #include "GB.h"
 #include "SDL.h"
+#include "Serializer.h"
 
 CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : 
   gb(gb),
@@ -655,10 +656,22 @@ void CPU::HandleInput() {
   }
 }
 
-void CPU::Serialize(const Serializer & s) {
+void CPU::Serialize(Serializer & s) {
+  s.SerializeArray<byte>(registers, 8);
+  s.Serialize<word>(SP);
+  s.Serialize<word>(PC);
+  s.Serialize<bool>(halted);
+  s.Serialize<bool>(stopped);
+  s.Serialize<bool>(interruptsEnabled);
 }
 
-void CPU::Deserialize(const Serializer & s) {
+void CPU::Deserialize(Serializer & s) {
+  s.DeserializeArray<byte>(registers, 8);
+  SP = s.Deserialize<word>();
+  PC = s.Deserialize<word>();
+  halted = s.Deserialize<bool>();
+  stopped = s.Deserialize<bool>();
+  interruptsEnabled = s.Deserialize<bool>();
 }
 
 void CPU::PerformInterrupt(int id) {
