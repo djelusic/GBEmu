@@ -4,18 +4,22 @@
 #include <thread>
 #include <functional>
 
-GB::GB(const char* rom_fname) :
+GB::GB(const char* rom_fpath) :
   controller(this),
-  MMU(this, rom_fname, controller),
+  MMU(this, rom_fpath, controller),
   Cpu(this, MMU, controller),
   timers(Cpu, MMU),
   graphics(this, MMU, Cpu),
   sdl(this, graphics, controller, MMU),
-  serializer(0x1C0BC),
+  serializer(0x20000),
   framerateUnlocked(false),
   doubleSpeed(false) {
   Cpu.SetInputCallback([this](void) -> bool {return sdl.HandleInput(); });
   graphics.SetVblankCallback([this](void) -> void {sdl.RenderScreen(); });
+  std::string path(rom_fpath);
+  auto basename = path.substr(path.find_last_of("/\\") + 1);
+  auto pos = basename.find_last_of(".");
+  ROMName = basename.substr(0, pos);
 }
 
 void GB::AdvanceFrame() {
@@ -74,6 +78,10 @@ bool GB::IsDoubleSpeed() {
   return doubleSpeed;
 }
 
+std::string GB::GetROMName() {
+  return ROMName;
+}
+
 void GB::Serialize(Serializer & s) {
   s.Serialize<int>(currentCycles);
   s.Serialize<bool>(CGBMode);
@@ -86,24 +94,24 @@ void GB::Deserialize(Serializer & s) {
   doubleSpeed = s.Deserialize<bool>();
 }
 
-void GB::SaveState(const char * fpath) {
+void GB::SaveState() {
   controller.Serialize(serializer);
   MMU.Serialize(serializer);
   Cpu.Serialize(serializer);
   timers.Serialize(serializer);
   graphics.Serialize(serializer);
   Serialize(serializer);
-  serializer.SaveFile(fpath);
+  serializer.SaveFile(("states/" + ROMName + ".state").c_str());
   serializer.Reset();
 }
 
-void GB::LoadState(const char * fpath) {
-  serializer.Reset();
-  serializer.LoadFile(fpath);
+void GB::LoadState() {
+  serializer.LoadFile(("states/" + ROMName + ".state").c_str());
   controller.Deserialize(serializer);
   MMU.Deserialize(serializer);
   Cpu.Deserialize(serializer);
   timers.Deserialize(serializer);
   graphics.Deserialize(serializer);
   Deserialize(serializer);
+  serializer.Reset();
 }

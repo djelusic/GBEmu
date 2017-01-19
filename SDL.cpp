@@ -83,10 +83,10 @@ void SDL::HandleEvents() {
         gb->ToggleFrameLimit();
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_F1) {
-        gb->SaveState("test.state");
+        gb->SaveState();
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
-        gb->LoadState("test.state");
+        gb->LoadState();
       }
     }
   }

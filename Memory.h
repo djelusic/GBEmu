@@ -40,7 +40,7 @@ private:
   void ChangeBanks(const word& address, const byte& val);
 
 public:
-  Memory(GB *gb, const char* rom_fname, Controller &controller);
+  Memory(GB *gb, const char* rom_fpath, Controller &controller);
   ~Memory();
 
   void Serialize(Serializer & s);

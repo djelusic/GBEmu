@@ -26,10 +26,11 @@ private:
   bool framerateUnlocked;
   bool doubleSpeed;
   int fps;
+  std::string ROMName;
 
 public:
 
-  GB(const char* rom_fname);
+  GB(const char* rom_fpath);
   void Run();
   void SetCGBMode(bool val);
   bool CGBModeEnabled();
@@ -37,11 +38,13 @@ public:
   void SetDoubleSpeed(bool val);
   bool IsDoubleSpeed();
 
+  std::string GetROMName();
+
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);
 
-  void SaveState(const char * fpath);
-  void LoadState(const char * fpath);
+  void SaveState();
+  void LoadState();
 
 private:
 

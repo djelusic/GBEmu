@@ -4,8 +4,8 @@
 #include <fstream>
 #include <iostream>
 
-void Memory::LoadCartridge(const char* fname) {
-  std::ifstream fin(fname, std::ios::in | std::ios::binary);
+void Memory::LoadCartridge(const char* fpath) {
+  std::ifstream fin(fpath, std::ios::in | std::ios::binary);
   fin.seekg(0, std::ios::end);
   int length = fin.tellg();
   fin.seekg(0, std::ios::beg);
@@ -58,13 +58,15 @@ void Memory::ChangeBanks(const word & address, const byte & val) {
 }
 
 void Memory::SaveRAM() {
-  std::ofstream fout("test_roms/title.sav", std::ios::out | std::ios::binary);
+  std::string ROMName(gb->GetROMName());
+  std::ofstream fout("battery/" + ROMName + ".sav", std::ios::out | std::ios::binary);
   fout.write((char*)m_CartridgeRAM, 0x20000);
   fout.close();
 }
 
 void Memory::LoadRAM() {
-  std::ifstream fin("test_roms/title.sav", std::ios::in | std::ios::binary);
+  std::string ROMName(gb->GetROMName());
+  std::ifstream fin("battery/" + ROMName + ".sav", std::ios::in | std::ios::binary);
   fin.seekg(0, std::ios::end);
   int length = fin.tellg();
   fin.seekg(0, std::ios::beg);
