@@ -48,6 +48,8 @@ public:
   int HandleInterrupts();
   void SetInputCallback(std::function<bool(void)> cb);
   void HandleInput();
+  word GetPC();
+  byte GetRegister(int r_id);
 
   void Serialize(Serializer &s);
   void Deserialize(Serializer &s);

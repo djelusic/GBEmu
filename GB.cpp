@@ -3,6 +3,8 @@
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <iostream>
+#include <string>
 
 GB::GB(const char* rom_fpath) :
   controller(this),
@@ -12,8 +14,10 @@ GB::GB(const char* rom_fpath) :
   graphics(this, MMU, Cpu),
   sdl(this, graphics, controller, MMU),
   serializer(0x20000),
+  disassembler(this, MMU, Cpu),
   framerateUnlocked(false),
-  doubleSpeed(false) {
+  doubleSpeed(false),
+  debugLogCallback(nullptr) {
   Cpu.SetInputCallback([this](void) -> bool {return sdl.HandleInput(); });
   graphics.SetVblankCallback([this](void) -> void {sdl.RenderScreen(); });
   std::string path(rom_fpath);
@@ -25,6 +29,7 @@ GB::GB(const char* rom_fpath) :
 void GB::AdvanceFrame() {
   currentCycles = 0;
   while (currentCycles < CYCLES_PER_FRAME) {
+    disassembler.Disassemble(Cpu.GetPC(), 1);
     int cycles = Cpu.Advance();
     timers.Update(cycles);
     if (doubleSpeed) cycles /= 2;
@@ -114,4 +119,11 @@ void GB::LoadState() {
   graphics.Deserialize(serializer);
   Deserialize(serializer);
   serializer.Reset();
+}
+
+void GB::DebugLog(std::string & s) {
+  if (debugLogCallback != nullptr) {
+    debugLogCallback(s);
+  }
+  else std::cout << s << std::endl;
 }

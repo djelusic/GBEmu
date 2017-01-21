@@ -121,6 +121,7 @@
     <ClInclude Include="CPU.h" />
     <ClInclude Include="GB.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Disassembler.h" />
     <ClInclude Include="SDL.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Serializer.h" />
@@ -130,6 +131,7 @@
   <ItemGroup>
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="CPU.cpp" />
+    <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="GB.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Main.cpp" />

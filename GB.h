@@ -6,6 +6,7 @@
 #include "Controller.h"
 #include "SDL.h"
 #include "Serializer.h"
+#include "Disassembler.h"
 
 #define CYCLES_PER_FRAME 70224
 #define TIME_PER_FRAME 1.0 / 60.0
@@ -22,11 +23,13 @@ private:
   Graphics graphics;
   SDL sdl;
   Serializer serializer;
+  Disassembler disassembler;
   bool CGBMode;
   bool framerateUnlocked;
   bool doubleSpeed;
   int fps;
   std::string ROMName;
+  std::function<void(std::string)> debugLogCallback;
 
 public:
 
@@ -45,6 +48,8 @@ public:
 
   void SaveState();
   void LoadState();
+
+  void DebugLog(std::string &s);
 
 private:
 

@@ -257,7 +257,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0xC8] = &CPU::RET_Z;
   opCodeMap[0xC9] = &CPU::RET;
   opCodeMap[0xCA] = &CPU::JP_Z_nn;
-  //opCodeMap[0xCB] MAPPED TO 0xCB MAP
+  opCodeMap[0xCB] = nullptr;
   opCodeMap[0xCC] = &CPU::CALL_Z_nn;
   opCodeMap[0xCD] = &CPU::CALL_nn;
   opCodeMap[0xCE] = &CPU::ADC_A_n;
@@ -267,7 +267,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0xD0] = &CPU::RET_NC;
   opCodeMap[0xD1] = &CPU::POP_DE;
   opCodeMap[0xD2] = &CPU::JP_NC_nn;
-  //opCodeMap[0xD3] UNUSED
+  opCodeMap[0xD3] = nullptr;
   opCodeMap[0xD4] = &CPU::CALL_NC_nn;
   opCodeMap[0xD5] = &CPU::PUSH_DE;
   opCodeMap[0xD6] = &CPU::SUB_A_n;
@@ -275,9 +275,9 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0xD8] = &CPU::RET_C;
   opCodeMap[0xD9] = &CPU::RETI;
   opCodeMap[0xDA] = &CPU::JP_C_nn;
-  //opCodeMap[0xDB] UNUSED
+  opCodeMap[0xDB] = nullptr;
   opCodeMap[0xDC] = &CPU::CALL_C_nn;
-  //opCodeMap[0xDD] UNUSED
+  opCodeMap[0xDD] = nullptr;
   opCodeMap[0xDE] = &CPU::SBC_A_n;
   opCodeMap[0xDF] = &CPU::RST_n;
 
@@ -285,17 +285,17 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0xE0] = &CPU::LDH_nm_A;
   opCodeMap[0xE1] = &CPU::POP_HL;
   opCodeMap[0xE2] = &CPU::LD_Cm_A;
-  //opCodeMap[0xE3] UNUSED
-  //opCodeMap[0xE4] UNUSED
+  opCodeMap[0xE3] = nullptr;
+  opCodeMap[0xE4] = nullptr;
   opCodeMap[0xE5] = &CPU::PUSH_HL;
   opCodeMap[0xE6] = &CPU::AND_A_n;
   opCodeMap[0xE7] = &CPU::RST_n;
   opCodeMap[0xE8] = &CPU::ADD_SP_n;
   opCodeMap[0xE9] = &CPU::JP_HL;
   opCodeMap[0xEA] = &CPU::LD_nnm_A;
-  //opCodeMap[0xEB] UNUSED
-  //opCodeMap[0xEC] UNUSED
-  //opCodeMap[0xED] UNUSED
+  opCodeMap[0xEB] = nullptr;
+  opCodeMap[0xEC] = nullptr;
+  opCodeMap[0xED] = nullptr;
   opCodeMap[0xEE] = &CPU::XOR_A_n;
   opCodeMap[0xEF] = &CPU::RST_n;
 
@@ -304,7 +304,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0xF1] = &CPU::POP_AF;
   opCodeMap[0xF2] = &CPU::LD_A_Cm;
   opCodeMap[0xF3] = &CPU::DI;
-  //opCodeMap[0xF4] UNUSED
+  opCodeMap[0xF4] = nullptr;
   opCodeMap[0xF5] = &CPU::PUSH_AF;
   opCodeMap[0xF6] = &CPU::OR_A_n;
   opCodeMap[0xF7] = &CPU::RST_n;
@@ -312,14 +312,12 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   opCodeMap[0xF9] = &CPU::LD_SP_HL;
   opCodeMap[0xFA] = &CPU::LD_A_nnm;
   opCodeMap[0xFB] = &CPU::EI;
-  //opCodeMap[0xFC] UNUSED
-  //opCodeMap[0xFD] UNUSED
+  opCodeMap[0xFC] = nullptr;
+  opCodeMap[0xFD] = nullptr;
   opCodeMap[0xFE] = &CPU::CP_A_n;
   opCodeMap[0xFF] = &CPU::RST_n;
 
-  /*
-  Z80 Command Set - CB
-  */
+  // CB Prefix
 
   // 00
   opCodeMapCB[0x00] = &CPU::RLC_r;
@@ -654,6 +652,14 @@ void CPU::HandleInput() {
   if (inputCallback != nullptr && inputCallback()) {
     RequestInterrupt(4);
   }
+}
+
+word CPU::GetPC() {
+  return PC;
+}
+
+byte CPU::GetRegister(int r_id) {
+  return registers[r_id];
 }
 
 void CPU::Serialize(Serializer & s) {
