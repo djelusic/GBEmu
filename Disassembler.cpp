@@ -2,8 +2,7 @@
 #include "Memory.h"
 #include "GB.h"
 #include "CPU.h"
-#include <iomanip>
-#include <sstream>
+#include "Format.h"
 
 Disassembler::Disassembler(GB * gb, Memory & MMU, CPU &Cpu) : 
   gb(gb), 
@@ -596,88 +595,67 @@ Disassembler::Disassembler(GB * gb, Memory & MMU, CPU &Cpu) :
 void Disassembler::Disassemble(word pc, int num_opcodes) {
   PC = pc;
   for (int i = 0; i < num_opcodes; i++) {
-    std::stringstream pcStr;
-    pcStr << std::setfill('0') << std::setw(4)
-      << std::hex << (int)PC;
+    std::string pcStr = Format::Word(PC);
     byte opCode = MMU.ReadByte(PC++);
     if (opCode == 0xCB) {
       opCode = MMU.ReadByte(PC++);
       if (opCodeMapCB[opCode] != nullptr) {
-        gb->DebugLog(pcStr.str() + " CB " + (this->*opCodeMapCB[opCode])(opCode));
+        gb->DebugLog(pcStr + " CB " + (this->*opCodeMapCB[opCode])(opCode));
       }
     }
     else if (opCodeMap[opCode] != nullptr) {
-      gb->DebugLog(pcStr.str() + "    " + (this->*opCodeMap[opCode])(opCode));
+      gb->DebugLog(pcStr + "    " + (this->*opCodeMap[opCode])(opCode));
     }
   }
 }
 
-std::string Disassembler::ReadByte() {
-  std::stringstream ret;
-  ret << std::setfill('0') << std::setw(2) 
-      << std::hex << (int)MMU.ReadByte(PC++);
-  return ret.str();
+std::string Disassembler::ReadByte(bool is_signed) {
+  int val = is_signed ? static_cast<sbyte>(MMU.ReadByte(PC)) : MMU.ReadByte(PC);
+  PC++;
+  return Format::Byte(val);
 }
 
-std::string Disassembler::ReadWord() {
-  std::stringstream ret;
-  ret << std::setfill('0') << std::setw(4) 
-      << std::hex << (int)MMU.ReadWord(PC);
+std::string Disassembler::ReadWord(bool is_signed) {
+  int val = is_signed ? static_cast<sword>(MMU.ReadWord(PC)) : MMU.ReadWord(PC);
   PC += 2;
-  return ret.str();
-}
-
-std::string Disassembler::GetRegisterName(int r1_id, int r2_id) {
-  std::string regMap = "BCDEHLFA";
-  std::string name(1, regMap[r1_id]);
-  if (r2_id >= 0) name += regMap[r2_id];
-  return name;
-}
-
-std::string Disassembler::GetRegisterValue(int r1_id, int r2_id) {
-  word val = Cpu.GetRegister(r1_id);
-  if (r2_id >= 0) val = (val << 8) | Cpu.GetRegister(r2_id);
-  std::stringstream ret;
-  ret << std::setfill('0') << std::setw(4)
-    << std::hex << (int)val;
-  return ret.str();
+  return Format::Word(val);
 }
 
 std::string Disassembler::LD_r_n(const byte & op_code) {
   byte r_id = op_code >> 3;
-  return "LD   " + GetRegisterName(r_id) + "," + ReadByte();
+  return "LD   " + Cpu.GetRegisterName(r_id) + "," + ReadByte();
 }
 
 std::string Disassembler::LD_r1_r2(const byte & op_code) {
   byte r1_id = (op_code & 0x38) >> 3;
   byte r2_id = op_code & 0x7;
-  return "LD   " + GetRegisterName(r1_id) + 
-    "," + GetRegisterName(r2_id);
+  return "LD   " + Cpu.GetRegisterName(r1_id) + 
+    "," + Cpu.GetRegisterName(r2_id);
 }
 
 std::string Disassembler::LD_r_HLm(const byte & op_code) {
   byte r_id = (op_code >> 3) & 0x7;
-  return "LD   " + GetRegisterName(r_id) + 
-    ",(" + GetRegisterValue(4, 5) + ")";
+  return "LD   " + Cpu.GetRegisterName(r_id) + 
+    ",(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::LD_HLm_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "LD   (" + GetRegisterValue(4, 5) + ")" + 
-    GetRegisterName(r_id);
+  return "LD   (" + Cpu.GetRegisterValue(4, 5) + ")" + 
+    Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::LD_HLm_n(const byte & op_code) {
-  return "LD   (" + GetRegisterValue(4, 5) + ")" +
+  return "LD   (" + Cpu.GetRegisterValue(4, 5) + ")" +
     ReadByte();
 }
 
 std::string Disassembler::LD_A_BCm(const byte & op_code) {
-  return "LD   A,(" + GetRegisterValue(0, 1) + ")";
+  return "LD   A,(" + Cpu.GetRegisterValue(0, 1) + ")";
 }
 
 std::string Disassembler::LD_A_DEm(const byte & op_code) {
-  return "LD   A,(" + GetRegisterValue(2, 3) + ")";
+  return "LD   A,(" + Cpu.GetRegisterValue(2, 3) + ")";
 }
 
 std::string Disassembler::LD_A_nnm(const byte & op_code) {
@@ -685,11 +663,11 @@ std::string Disassembler::LD_A_nnm(const byte & op_code) {
 }
 
 std::string Disassembler::LD_BCm_A(const byte & op_code) {
-  return "LD   (" + GetRegisterValue(0, 1) + "),A";
+  return "LD   (" + Cpu.GetRegisterValue(0, 1) + "),A";
 }
 
 std::string Disassembler::LD_DEm_A(const byte & op_code) {
-  return "LD   (" + GetRegisterValue(2, 3) + "),A";
+  return "LD   (" + Cpu.GetRegisterValue(2, 3) + "),A";
 }
 
 std::string Disassembler::LD_nnm_A(const byte & op_code) {
@@ -697,27 +675,27 @@ std::string Disassembler::LD_nnm_A(const byte & op_code) {
 }
 
 std::string Disassembler::LD_A_Cm(const byte & op_code) {
-  return "LD   A,(FF00+" + GetRegisterValue(1) + ")";
+  return "LD   A,(FF00+" + Cpu.GetRegisterValue(1) + ")";
 }
 
 std::string Disassembler::LD_Cm_A(const byte & op_code) {
-  return "LD   (FF00+" + GetRegisterValue(1) +"),A";
+  return "LD   (FF00+" + Cpu.GetRegisterValue(1) +"),A";
 }
 
 std::string Disassembler::LDD_A_HLm(const byte & op_code) {
-  return "LDD  A,(" + GetRegisterValue(4, 5) + ")";
+  return "LDD  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::LDD_HLm_A(const byte & op_code) {
-  return "LDD  (" + GetRegisterValue(4, 5) + "),A";
+  return "LDD  (" + Cpu.GetRegisterValue(4, 5) + "),A";
 }
 
 std::string Disassembler::LDI_A_HLm(const byte & op_code) {
-  return "LDI  A,(" + GetRegisterValue(4, 5) + ")";
+  return "LDI  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::LDI_HLm_A(const byte & op_code) {
-  return "LDI  (" + GetRegisterValue(4, 5) + "),A";
+  return "LDI  (" + Cpu.GetRegisterValue(4, 5) + "),A";
 }
 
 std::string Disassembler::LDH_nm_A(const byte & op_code) {
@@ -749,7 +727,7 @@ std::string Disassembler::LD_SP_HL(const byte & op_code) {
 }
 
 std::string Disassembler::LDHL_SP_n(const byte & op_code) {
-  return "LDHL SP," + ReadByte();
+  return "LDHL SP," + ReadByte(true);
 }
 
 std::string Disassembler::LD_nnm_SP(const byte & op_code) {
@@ -790,11 +768,11 @@ std::string Disassembler::POP_HL(const byte & op_code) {
 
 std::string Disassembler::ADD_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "ADD  A," + GetRegisterName(r_id);
+  return "ADD  A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::ADD_A_HLm(const byte & op_code) {
-  return "ADD  A,(" + GetRegisterValue(4,5) + ")";
+  return "ADD  A,(" + Cpu.GetRegisterValue(4,5) + ")";
 }
 
 std::string Disassembler::ADD_A_n(const byte & op_code) {
@@ -803,11 +781,11 @@ std::string Disassembler::ADD_A_n(const byte & op_code) {
 
 std::string Disassembler::ADC_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "ADC  A," + GetRegisterName(r_id);
+  return "ADC  A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::ADC_A_HLm(const byte & op_code) {
-  return "ADC  A,(" + GetRegisterValue(4, 5) + ")";
+  return "ADC  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::ADC_A_n(const byte & op_code) {
@@ -816,11 +794,11 @@ std::string Disassembler::ADC_A_n(const byte & op_code) {
 
 std::string Disassembler::SUB_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "SUB  A," + GetRegisterName(r_id);
+  return "SUB  A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SUB_A_HLm(const byte & op_code) {
-  return "SUB  A,(" + GetRegisterValue(4, 5) + ")";
+  return "SUB  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::SUB_A_n(const byte & op_code) {
@@ -829,11 +807,11 @@ std::string Disassembler::SUB_A_n(const byte & op_code) {
 
 std::string Disassembler::SBC_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "SBC  A," + GetRegisterName(r_id);
+  return "SBC  A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SBC_A_HLm(const byte & op_code) {
-  return "SBC  A,(" + GetRegisterValue(4, 5) + ")";
+  return "SBC  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::SBC_A_n(const byte & op_code) {
@@ -842,11 +820,11 @@ std::string Disassembler::SBC_A_n(const byte & op_code) {
 
 std::string Disassembler::AND_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "AND  A," + GetRegisterName(r_id);
+  return "AND  A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::AND_A_HLm(const byte & op_code) {
-  return "AND  A,(" + GetRegisterValue(4, 5) + ")";
+  return "AND  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::AND_A_n(const byte & op_code) {
@@ -855,11 +833,11 @@ std::string Disassembler::AND_A_n(const byte & op_code) {
 
 std::string Disassembler::OR_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "OR   A," + GetRegisterName(r_id);
+  return "OR   A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::OR_A_HLm(const byte & op_code) {
-  return "OR   A,(" + GetRegisterValue(4, 5) + ")";
+  return "OR   A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::OR_A_n(const byte & op_code) {
@@ -868,11 +846,11 @@ std::string Disassembler::OR_A_n(const byte & op_code) {
 
 std::string Disassembler::XOR_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "XOR  A," + GetRegisterName(r_id);
+  return "XOR  A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::XOR_A_HLm(const byte & op_code) {
-  return "XOR  A,(" + GetRegisterValue(4, 5) + ")";
+  return "XOR  A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::XOR_A_n(const byte & op_code) {
@@ -881,11 +859,11 @@ std::string Disassembler::XOR_A_n(const byte & op_code) {
 
 std::string Disassembler::CP_A_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "CP   A," + GetRegisterName(r_id);
+  return "CP   A," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::CP_A_HLm(const byte & op_code) {
-  return "CP   A,(" + GetRegisterValue(4, 5) + ")";
+  return "CP   A,(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::CP_A_n(const byte & op_code) {
@@ -894,20 +872,20 @@ std::string Disassembler::CP_A_n(const byte & op_code) {
 
 std::string Disassembler::INC_r(const byte & op_code) {
   byte r_id = (op_code >> 3) & 0x7;
-  return "INC  " + GetRegisterName(r_id);
+  return "INC  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::INC_HLm(const byte & op_code) {
-  return "INC  (" + GetRegisterValue(4, 5) + ")";
+  return "INC  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::DEC_r(const byte & op_code) {
   byte r_id = (op_code >> 3) & 0x7;
-  return "DEC  " + GetRegisterName(r_id);
+  return "DEC  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::DEC_HLm(const byte & op_code) {
-  return "DEC  (" + GetRegisterValue(4, 5) + ")";
+  return "DEC  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::ADD_HL_BC(const byte & op_code) {
@@ -927,7 +905,7 @@ std::string Disassembler::ADD_HL_SP(const byte & op_code) {
 }
 
 std::string Disassembler::ADD_SP_n(const byte & op_code) {
-  return "ADD  SP," + ReadByte();
+  return "ADD  SP," + ReadByte(true);
 }
 
 std::string Disassembler::INC_BC(const byte & op_code) {
@@ -964,11 +942,11 @@ std::string Disassembler::DEC_SP(const byte & op_code) {
 
 std::string Disassembler::SWAP_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "SWAP " + GetRegisterName(r_id);
+  return "SWAP " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SWAP_HLm(const byte & op_code) {
-  return "SWAP (" + GetRegisterValue(4,5) + ")";
+  return "SWAP (" + Cpu.GetRegisterValue(4,5) + ")";
 }
 
 std::string Disassembler::DAA(const byte & op_code) {
@@ -1025,98 +1003,98 @@ std::string Disassembler::RRA(const byte & op_code) {
 
 std::string Disassembler::RLC_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "RLC  " + GetRegisterName(r_id);
+  return "RLC  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::RLC_HLm(const byte & op_code) {
-  return "RLC  (" + GetRegisterValue(4, 5) + ")";
+  return "RLC  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::RL_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "RL   " + GetRegisterName(r_id);
+  return "RL   " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::RL_HLm(const byte & op_code) {
-  return "RL   (" + GetRegisterValue(4, 5) + ")";
+  return "RL   (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::RRC_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "RRC  " + GetRegisterName(r_id);
+  return "RRC  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::RRC_HLm(const byte & op_code) {
-  return "RRC  (" + GetRegisterValue(4, 5) + ")";
+  return "RRC  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::RR_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "RR   " + GetRegisterName(r_id);
+  return "RR   " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::RR_HLm(const byte & op_code) {
-  return "RR   (" + GetRegisterValue(4, 5) + ")";
+  return "RR   (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::SLA_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "SLA  " + GetRegisterName(r_id);
+  return "SLA  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SLA_HLm(const byte & op_code) {
-  return "SLA  (" + GetRegisterValue(4, 5) + ")";
+  return "SLA  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::SRA_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "SRA  " + GetRegisterName(r_id);
+  return "SRA  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SRA_HLm(const byte & op_code) {
-  return "SRA  (" + GetRegisterValue(4, 5) + ")";
+  return "SRA  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::SRL_r(const byte & op_code) {
   byte r_id = op_code & 0x7;
-  return "SRL  " + GetRegisterName(r_id);
+  return "SRL  " + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SRL_HLm(const byte & op_code) {
-  return "SRL  (" + GetRegisterValue(4, 5) + ")";
+  return "SRL  (" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::BIT_b_r(const byte & op_code) {
   byte b = (op_code >> 3) & 0x7;
   byte r_id = op_code & 0x7;
-  return "BIT  " + std::to_string((int)b) + "," + GetRegisterName(r_id);
+  return "BIT  " + std::to_string((int)b) + "," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::BIT_b_HLm(const byte & op_code) {
   byte b = (op_code >> 3) & 0x7;
-  return "BIT  " + std::to_string((int)b) + ",(" + GetRegisterValue(4, 5) + ")";
+  return "BIT  " + std::to_string((int)b) + ",(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::SET_b_r(const byte & op_code) {
   byte b = (op_code >> 3) & 0x7;
   byte r_id = op_code & 0x7;
-  return "SET  " + std::to_string((int)b) + "," + GetRegisterName(r_id);
+  return "SET  " + std::to_string((int)b) + "," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::SET_b_HLm(const byte & op_code) {
   byte b = (op_code >> 3) & 0x7;
-  return "SET  " + std::to_string((int)b) + ",(" + GetRegisterValue(4, 5) + ")";
+  return "SET  " + std::to_string((int)b) + ",(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::RES_b_r(const byte & op_code) {
   byte b = (op_code >> 3) & 0x7;
   byte r_id = op_code & 0x7;
-  return "RES  " + std::to_string((int)b) + "," + GetRegisterName(r_id);
+  return "RES  " + std::to_string((int)b) + "," + Cpu.GetRegisterName(r_id);
 }
 
 std::string Disassembler::RES_b_HLm(const byte & op_code) {
   byte b = (op_code >> 3) & 0x7;
-  return "RES  " + std::to_string((int)b) + ",(" + GetRegisterValue(4, 5) + ")";
+  return "RES  " + std::to_string((int)b) + ",(" + Cpu.GetRegisterValue(4, 5) + ")";
 }
 
 std::string Disassembler::JP_nn(const byte & op_code) {
@@ -1144,23 +1122,23 @@ std::string Disassembler::JP_HL(const byte & op_code) {
 }
 
 std::string Disassembler::JR_n(const byte & op_code) {
-  return "JR   " + ReadByte();
+  return "JR   " + ReadByte(true);
 }
 
 std::string Disassembler::JR_NZ_n(const byte & op_code) {
-  return "JR   NZ," + ReadByte();
+  return "JR   NZ," + ReadByte(true);
 }
 
 std::string Disassembler::JR_Z_n(const byte & op_code) {
-  return "JR   Z," + ReadByte();
+  return "JR   Z," + ReadByte(true);
 }
 
 std::string Disassembler::JR_NC_n(const byte & op_code) {
-  return "JR   NC," + ReadByte();
+  return "JR   NC," + ReadByte(true);
 }
 
 std::string Disassembler::JR_C_n(const byte & op_code) {
-  return "JR   C," + ReadByte();
+  return "JR   C," + ReadByte(true);
 }
 
 std::string Disassembler::CALL_nn(const byte & op_code) {

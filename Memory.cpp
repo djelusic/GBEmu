@@ -226,6 +226,11 @@ byte Memory::ReadByte(const word& address) {
   if (address == 0xFF00) {
     return controller.GetInput();
   }
+  if (address == 0xFF26) {
+    // Temporary workaround for some games that don't work without sound
+    // TODO: implement proper sound support
+    return 0;
+  }
   if (address == 0xFF69 && gb->CGBModeEnabled()) {
     byte index = m_MMU[0xFF68] & 0x3F;
     return m_PaletteData[index];

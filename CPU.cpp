@@ -4,6 +4,7 @@
 #include "GB.h"
 #include "SDL.h"
 #include "Serializer.h"
+#include <sstream>
 
 CPU::CPU(GB *gb, Memory &MMU, Controller &controller) : 
   gb(gb),
@@ -658,6 +659,10 @@ word CPU::GetPC() {
   return PC;
 }
 
+word CPU::GetSP() {
+  return SP;
+}
+
 byte CPU::GetRegister(int r_id) {
   return registers[r_id];
 }
@@ -678,6 +683,22 @@ void CPU::Deserialize(Serializer & s) {
   halted = s.Deserialize<bool>();
   stopped = s.Deserialize<bool>();
   interruptsEnabled = s.Deserialize<bool>();
+}
+
+std::string CPU::GetRegisterName(int r1_id, int r2_id) {
+  std::string regMap = "BCDEHLFA";
+  std::string name(1, regMap[r1_id]);
+  if (r2_id >= 0) name += regMap[r2_id];
+  return name;
+}
+
+std::string CPU::GetRegisterValue(int r1_id, int r2_id) {
+  word val = GetRegister(r1_id);
+  if (r2_id >= 0) val = (val << 8) | GetRegister(r2_id);
+  std::stringstream ret;
+  ret << std::setfill('0') << std::setw(4)
+    << std::hex << (int)val;
+  return ret.str();
 }
 
 void CPU::PerformInterrupt(int id) {

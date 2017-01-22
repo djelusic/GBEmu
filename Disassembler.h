@@ -26,11 +26,8 @@ public:
 
 private:
 
-  std::string ReadByte();
-  std::string ReadWord();
-  
-  std::string GetRegisterName(int r1_id, int r2_id = -1);
-  std::string GetRegisterValue(int r1_id, int r2_id = -1);
+  std::string ReadByte(bool is_signed = false);
+  std::string ReadWord(bool is_signed = false);
 
   std::string LD_r_n(const byte& op_code);
   std::string LD_r1_r2(const byte & op_code);

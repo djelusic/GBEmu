@@ -49,10 +49,14 @@ public:
   void SetInputCallback(std::function<bool(void)> cb);
   void HandleInput();
   word GetPC();
+  word GetSP();
   byte GetRegister(int r_id);
 
   void Serialize(Serializer &s);
   void Deserialize(Serializer &s);
+
+  std::string GetRegisterName(int r1_id, int r2_id = -1);
+  std::string GetRegisterValue(int r1_id, int r2_id = -1);
 
 private:
 

@@ -22,5 +22,7 @@ public:
   void Advance();
 
 private:
-  
+
+  void PrintRegisterState();
+  void PrintHelp();
 };
