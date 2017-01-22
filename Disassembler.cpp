@@ -595,15 +595,20 @@ Disassembler::Disassembler(GB * gb, Memory & MMU, CPU &Cpu) :
 
 void Disassembler::Disassemble(word pc, int num_opcodes) {
   PC = pc;
-  byte opCode = MMU.ReadByte(PC++);
-  if (opCode == 0xCB) {
-    opCode = MMU.ReadByte(PC++);
-    if (opCodeMapCB[opCode] != nullptr) {
-      gb->DebugLog((this->*opCodeMapCB[opCode])(opCode));
+  for (int i = 0; i < num_opcodes; i++) {
+    std::stringstream pcStr;
+    pcStr << std::setfill('0') << std::setw(4)
+      << std::hex << (int)PC;
+    byte opCode = MMU.ReadByte(PC++);
+    if (opCode == 0xCB) {
+      opCode = MMU.ReadByte(PC++);
+      if (opCodeMapCB[opCode] != nullptr) {
+        gb->DebugLog(pcStr.str() + " CB " + (this->*opCodeMapCB[opCode])(opCode));
+      }
     }
-  }
-  else if (opCodeMap[opCode] != nullptr) {
-    gb->DebugLog((this->*opCodeMap[opCode])(opCode));
+    else if (opCodeMap[opCode] != nullptr) {
+      gb->DebugLog(pcStr.str() + "    " + (this->*opCodeMap[opCode])(opCode));
+    }
   }
 }
 
@@ -1159,23 +1164,23 @@ std::string Disassembler::JR_C_n(const byte & op_code) {
 }
 
 std::string Disassembler::CALL_nn(const byte & op_code) {
-  return "CALL  " + ReadWord();
+  return "CALL " + ReadWord();
 }
 
 std::string Disassembler::CALL_NZ_nn(const byte & op_code) {
-  return "CALL  NZ," + ReadWord();
+  return "CALL NZ," + ReadWord();
 }
 
 std::string Disassembler::CALL_Z_nn(const byte & op_code) {
-  return "CALL  Z," + ReadWord();
+  return "CALL Z," + ReadWord();
 }
 
 std::string Disassembler::CALL_NC_nn(const byte & op_code) {
-  return "CALL  NC," + ReadWord();
+  return "CALL NC," + ReadWord();
 }
 
 std::string Disassembler::CALL_C_nn(const byte & op_code) {
-  return "CALL  C," + ReadWord();
+  return "CALL C," + ReadWord();
 }
 
 std::string Disassembler::RST_n(const byte & op_code) {

@@ -12,9 +12,10 @@ GB::GB(const char* rom_fpath) :
   Cpu(this, MMU, controller),
   timers(Cpu, MMU),
   graphics(this, MMU, Cpu),
-  sdl(this, graphics, controller, MMU),
   serializer(0x20000),
   disassembler(this, MMU, Cpu),
+  debugger(Cpu, disassembler),
+  sdl(this, graphics, controller, MMU, debugger),
   framerateUnlocked(false),
   doubleSpeed(false),
   debugLogCallback(nullptr) {
@@ -29,7 +30,7 @@ GB::GB(const char* rom_fpath) :
 void GB::AdvanceFrame() {
   currentCycles = 0;
   while (currentCycles < CYCLES_PER_FRAME) {
-    disassembler.Disassemble(Cpu.GetPC(), 1);
+    debugger.Advance();
     int cycles = Cpu.Advance();
     timers.Update(cycles);
     if (doubleSpeed) cycles /= 2;

@@ -6,6 +6,7 @@ class GB;
 class Graphics;
 class Controller;
 class Memory;
+class Debugger;
 
 class SDL {
 
@@ -18,11 +19,12 @@ private:
   Graphics &graphics;
   Controller &controller;
   Memory &MMU;
+  Debugger &debugger;
 
   bool quit;
 
 public:
-  SDL(GB *gb, Graphics &graphics, Controller &controller, Memory &MMU);
+  SDL(GB *gb, Graphics &graphics, Controller &controller, Memory &MMU, Debugger &debugger);
   void RenderScreen();
   bool HandleInput();
   void HandleEvents();

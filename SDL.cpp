@@ -3,17 +3,19 @@
 #include "Graphics.h"
 #include "Controller.h"
 #include "Memory.h"
+#include "Debugger.h"
 #include <iostream>
 #include <string>
 
-SDL::SDL(GB *gb, Graphics & graphics, Controller & controller, Memory &MMU) :
+SDL::SDL(GB *gb, Graphics & graphics, Controller & controller, Memory & MMU, Debugger & debugger) :
   gb(gb),
   graphics(graphics),
   controller(controller),
   MMU(MMU),
+  debugger(debugger),
   quit(false) {
 	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
 }
@@ -87,6 +89,9 @@ void SDL::HandleEvents() {
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_F2) {
         gb->LoadState();
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_F9) {
+        debugger.ToggleActive();
       }
     }
   }

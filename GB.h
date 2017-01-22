@@ -7,6 +7,7 @@
 #include "SDL.h"
 #include "Serializer.h"
 #include "Disassembler.h"
+#include "Debugger.h"
 
 #define CYCLES_PER_FRAME 70224
 #define TIME_PER_FRAME 1.0 / 60.0
@@ -21,9 +22,10 @@ private:
   CPU Cpu;
   Timers timers;
   Graphics graphics;
-  SDL sdl;
   Serializer serializer;
   Disassembler disassembler;
+  Debugger debugger;
+  SDL sdl;
   bool CGBMode;
   bool framerateUnlocked;
   bool doubleSpeed;
