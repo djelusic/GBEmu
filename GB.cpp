@@ -121,7 +121,7 @@ void GB::LoadState() {
   serializer.Reset();
 }
 
-void GB::DebugLog(std::string & s) {
+void GB::DebugLog(std::string s) {
   if (debugLogCallback != nullptr) {
     debugLogCallback(s);
   }

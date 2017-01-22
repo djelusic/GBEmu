@@ -49,7 +49,7 @@ public:
   void SaveState();
   void LoadState();
 
-  void DebugLog(std::string &s);
+  void DebugLog(std::string s);
 
 private:
 
