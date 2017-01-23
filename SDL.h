@@ -16,17 +16,17 @@ private:
   SDL_Renderer *renderer;
 
   GB *gb;
-  Graphics &graphics;
-  Controller &controller;
-  Memory &MMU;
-  Debugger &debugger;
 
   bool quit;
+  bool framerateUnlocked;
+  int fps;
 
 public:
-  SDL(GB *gb, Graphics &graphics, Controller &controller, Memory &MMU, Debugger &debugger);
+  SDL(GB *gb);
   void RenderScreen();
   bool HandleInput();
   void HandleEvents();
+  void ToggleFrameLimit();
   void UpdateFPS(int fps);
+  void Run();
 };

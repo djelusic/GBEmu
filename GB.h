@@ -4,7 +4,6 @@
 #include "Timers.h"
 #include "Graphics.h"
 #include "Controller.h"
-#include "SDL.h"
 #include "Serializer.h"
 #include "Disassembler.h"
 #include "Debugger.h"
@@ -25,21 +24,17 @@ private:
   Serializer serializer;
   Disassembler disassembler;
   Debugger debugger;
-  SDL sdl;
   bool CGBMode;
-  bool framerateUnlocked;
   bool doubleSpeed;
-  int fps;
   std::string ROMName;
   std::function<void(std::string)> debugLogCallback;
 
 public:
 
   GB(const char* rom_fpath);
-  void Run();
+  void AdvanceFrame();
   void SetCGBMode(bool val);
   bool CGBModeEnabled();
-  void ToggleFrameLimit();
   void SetDoubleSpeed(bool val);
   bool IsDoubleSpeed();
 
@@ -53,8 +48,10 @@ public:
 
   void DebugLog(std::string s);
 
-private:
-
-  void AdvanceFrame();
+  Graphics* GetGraphics();
+  CPU* GetCPU();
+  Memory* GetMMU();
+  Controller* GetInput();
+  Debugger* GetDebugger();
 
 };

@@ -51,6 +51,9 @@
     <ClInclude Include="Format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="libretro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Memory.cpp">
@@ -87,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Format.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libretro.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

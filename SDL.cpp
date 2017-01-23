@@ -6,25 +6,24 @@
 #include "Debugger.h"
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <thread>
 
-SDL::SDL(GB *gb, Graphics & graphics, Controller & controller, Memory & MMU, Debugger & debugger) :
-  gb(gb),
-  graphics(graphics),
-  controller(controller),
-  MMU(MMU),
-  debugger(debugger),
-  quit(false) {
+SDL::SDL(GB *gb) :
+  gb(gb) {
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
+  gb->GetCPU()->SetInputCallback([this](void) -> bool {return HandleInput(); });
+  gb->GetGraphics()->SetVblankCallback([this](void) -> void { RenderScreen(); });
 }
 
 void SDL::RenderScreen() {
   if (quit) return;
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
-  byte* display = graphics.GetDisplayPixels();
+  byte* display = gb->GetGraphics()->GetDisplayPixels();
   void *pixels;
   int pitch = 0;
   SDL_LockTexture(texture, nullptr, &pixels, &pitch);
@@ -66,7 +65,7 @@ bool SDL::HandleInput() {
   if (keys[SDL_SCANCODE_M]) {
     newButtons |= (1 << 0);
   }
-  return controller.OnNewInput(newDpad, newButtons);
+  return gb->GetInput()->OnNewInput(newDpad, newButtons);
 }
 
 void SDL::HandleEvents() {
@@ -78,11 +77,11 @@ void SDL::HandleEvents() {
       SDL_DestroyRenderer(renderer);
       SDL_DestroyWindow(window);
       SDL_Quit();
-      MMU.SaveRAM();
+      gb->GetMMU()->SaveRAM();
     }
     if (event.type == SDL_KEYDOWN) {
       if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-        gb->ToggleFrameLimit();
+        ToggleFrameLimit();
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_F1) {
         gb->SaveState();
@@ -91,12 +90,40 @@ void SDL::HandleEvents() {
         gb->LoadState();
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_F9) {
-        debugger.ToggleActive();
+        gb->GetDebugger()->ToggleActive();
       }
     }
   }
 }
 
+void SDL::ToggleFrameLimit() {
+  framerateUnlocked = !framerateUnlocked;
+}
+
 void SDL::UpdateFPS(int fps) {
   SDL_SetWindowTitle(window, ("GBEmu " + std::to_string(fps)).c_str());
+}
+
+void SDL::Run() {
+  while (true) {
+    HandleEvents();
+    clock_t begin = clock();
+    gb->AdvanceFrame();
+    clock_t end = clock();
+    double elapsedSecs = double(end - begin) / CLOCKS_PER_SEC;
+    double frameTime = elapsedSecs;
+    if (!framerateUnlocked && elapsedSecs < TIME_PER_FRAME) {
+      frameTime = TIME_PER_FRAME;
+    }
+    fps = static_cast<int>((fps * 0.9) + ((1.0 / frameTime) * 0.1));
+    UpdateFPS(fps);
+    int remainingTime = (int)((TIME_PER_FRAME - elapsedSecs) * 1000);
+    // std::cout << "Remaining time: " << remainingTime << std::endl;
+    if (remainingTime < 0) remainingTime = 0;
+    if (!framerateUnlocked) {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(remainingTime)
+      );
+    }
+  }
 }
