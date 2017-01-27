@@ -3,6 +3,10 @@
 #include "Serializer.h"
 
 Controller::Controller(GB *gb) : gb(gb) {
+  Reset();
+}
+
+void Controller::Reset() {
   dpad = 0;
   buttons = 0;
   dpadSelected = false;

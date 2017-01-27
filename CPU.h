@@ -52,6 +52,8 @@ public:
   word GetSP();
   byte GetRegister(int r_id);
 
+  void Reset();
+
   void Serialize(Serializer &s);
   void Deserialize(Serializer &s);
 

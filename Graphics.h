@@ -44,6 +44,8 @@ public:
   byte* GetDisplayPixels();
   void SetVblankCallback(std::function<void(void)> cb);
 
+  void Reset();
+
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);
 

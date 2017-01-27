@@ -29,6 +29,8 @@ public:
   bool TimerEnabled();
   void SetUpdateFrequency();
 
+  void Reset();
+
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);
 

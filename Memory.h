@@ -18,7 +18,7 @@ private:
   byte *m_PaletteData;
   GB *gb;
 
-  const char *rom_fname;
+  const char *rom_fpath;
 
   int currentROMBank;
   byte currentRAMBank;
@@ -40,8 +40,10 @@ private:
   void ChangeBanks(const word& address, const byte& val);
 
 public:
-  Memory(GB *gb, const char* rom_fpath, Controller &controller);
+  Memory(GB *gb, Controller &controller);
   ~Memory();
+
+  void Reset();
 
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);

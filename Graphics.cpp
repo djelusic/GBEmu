@@ -10,8 +10,7 @@ Graphics::Graphics(GB *gb, Memory &MMU, CPU &Cpu) :
   gb(gb),
   currentCycles(0) {
   display = new byte[144 * 160 * 4];
-  for (int i = 0; i < 144 * 160 * 4; i++)
-    display[i] = 0xFF;
+  Reset();
 }
 
 Graphics::~Graphics() {
@@ -271,6 +270,10 @@ byte* Graphics::GetDisplayPixels() {
 
 void Graphics::SetVblankCallback(std::function<void(void)> cb) {
   vBlankCallback = cb;
+}
+
+void Graphics::Reset() {
+  memset(display, 0xFF, 144 * 160 * 4);
 }
 
 void Graphics::Serialize(Serializer & s) {

@@ -5,15 +5,15 @@
 #include <string>
 
 GB::GB(const char* rom_fpath) :
+  rom_fpath(rom_fpath),
   controller(this),
-  MMU(this, rom_fpath, controller),
+  MMU(this, controller),
   Cpu(this, MMU, controller),
   timers(Cpu, MMU),
   graphics(this, MMU, Cpu),
   serializer(0x20000),
   disassembler(this, MMU, Cpu),
   debugger(Cpu, disassembler),
-  doubleSpeed(false),
   debugLogCallback(nullptr) {
   std::string path(rom_fpath);
   auto basename = path.substr(path.find_last_of("/\\") + 1);
@@ -52,6 +52,28 @@ bool GB::IsDoubleSpeed() {
 
 std::string GB::GetROMName() {
   return ROMName;
+}
+
+const char * GB::GetROMPath() {
+  return rom_fpath;
+}
+
+void GB::Reset() {
+  controller.Reset();
+  MMU.Reset();
+  Cpu.Reset();
+  timers.Reset();
+  graphics.Reset();
+  doubleSpeed = false;
+}
+
+void GB::LoadROM(const char * rom_fpath) {
+  this->rom_fpath = rom_fpath;
+  std::string path(rom_fpath);
+  auto basename = path.substr(path.find_last_of("/\\") + 1);
+  auto pos = basename.find_last_of(".");
+  ROMName = basename.substr(0, pos);
+  Reset();
 }
 
 void GB::Serialize(Serializer & s) {

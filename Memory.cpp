@@ -74,16 +74,35 @@ void Memory::LoadRAM() {
   fin.close();
 }
 
-Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) :
+Memory::Memory(GB *gb, Controller &controller) :
   gb(gb),
-  controller(controller),
-  rom_fname(rom_fname) {
+  controller(controller) {
   m_MMU = new byte[0x10000]();
   m_Cartridge = new byte[0x800000]();
   m_CartridgeRAM = new byte[0x20000]();
   m_VRAM = new byte[0x4000]();
   m_WRAM = new byte[0x8000]();
   m_PaletteData = new byte[0x80]();
+  Reset();
+}
+
+Memory::~Memory() {
+  SaveRAM();
+  delete[] m_MMU;
+  delete[] m_Cartridge;
+  delete[] m_CartridgeRAM;
+  delete[] m_VRAM;
+  delete[] m_WRAM;
+  delete[] m_PaletteData;
+}
+
+void Memory::Reset() {
+  memset(m_MMU, 0, 0x10000);
+  memset(m_Cartridge, 0, 0x800000);
+  memset(m_CartridgeRAM, 0, 0x20000);
+  memset(m_VRAM, 0, 0x4000);
+  memset(m_WRAM, 0, 0x8000);
+  memset(m_PaletteData, 0, 0x80);
 
   LoadRAM();
 
@@ -132,7 +151,7 @@ Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) :
   ramBankingMode = false;
   MBCMode = 0;
 
-  LoadCartridge(rom_fname);
+  LoadCartridge(gb->GetROMPath());
 
   byte MBCVal = m_Cartridge[0x147];
   if (MBCVal > 0 && MBCVal <= 3) {
@@ -152,16 +171,6 @@ Memory::Memory(GB *gb, const char* rom_fname, Controller &controller) :
   if (CGBEnable == 0x80 || CGBEnable == 0xC0) {
     gb->SetCGBMode(true);
   }
-}
-
-Memory::~Memory() {
-  SaveRAM();
-  delete[] m_MMU;
-  delete[] m_Cartridge;
-  delete[] m_CartridgeRAM;
-  delete[] m_VRAM;
-  delete[] m_WRAM;
-  delete[] m_PaletteData;
 }
 
 void Memory::Serialize(Serializer &s) {

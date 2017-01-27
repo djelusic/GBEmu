@@ -15,7 +15,15 @@ class GB {
 
 private:
 
+  const char * rom_fpath;
+  std::string ROMName;
+
+  std::function<void(std::string)> debugLogCallback;
+
+  bool CGBMode;
+  bool doubleSpeed;
   int currentCycles;
+
   Controller controller;
   Memory MMU;
   CPU Cpu;
@@ -24,10 +32,6 @@ private:
   Serializer serializer;
   Disassembler disassembler;
   Debugger debugger;
-  bool CGBMode;
-  bool doubleSpeed;
-  std::string ROMName;
-  std::function<void(std::string)> debugLogCallback;
 
 public:
 
@@ -39,6 +43,10 @@ public:
   bool IsDoubleSpeed();
 
   std::string GetROMName();
+  const char * GetROMPath();
+
+  void Reset();
+  void LoadROM(const char * rom_fpath);
 
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);

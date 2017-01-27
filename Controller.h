@@ -17,6 +17,8 @@ private:
 
 public:
 
+  void Reset();
+
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);
 

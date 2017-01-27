@@ -10,25 +10,7 @@ CPU::CPU(GB *gb, Memory &MMU, Controller &controller) :
   gb(gb),
   MMU(MMU), 
   controller(controller) {
-  registers[0] = 0x0; // B
-  registers[1] = 0x13; // C
-  registers[2] = 0x0; // D
-  registers[3] = 0xD8; // E
-  registers[4] = 0x1; // H
-  registers[5] = 0x4D; // L
-  registers[6] = 0xB0; // F
-  registers[7] = 0x1; // A
-
-  if (gb->CGBModeEnabled()) {
-    registers[7] = 0x11;
-  }
-
-  SP = 0xFFFE;
-  PC = 0x100;
-
-  halted = false;
-  stopped = false;
-  interruptsEnabled = true;
+  Reset();
 
   // 00
   opCodeMap[0x00] = &CPU::NOP;
@@ -665,6 +647,28 @@ word CPU::GetSP() {
 
 byte CPU::GetRegister(int r_id) {
   return registers[r_id];
+}
+
+void CPU::Reset() {
+  registers[0] = 0x0; // B
+  registers[1] = 0x13; // C
+  registers[2] = 0x0; // D
+  registers[3] = 0xD8; // E
+  registers[4] = 0x1; // H
+  registers[5] = 0x4D; // L
+  registers[6] = 0xB0; // F
+  registers[7] = 0x1; // A
+
+  if (gb->CGBModeEnabled()) {
+    registers[7] = 0x11;
+  }
+
+  SP = 0xFFFE;
+  PC = 0x100;
+
+  halted = false;
+  stopped = false;
+  interruptsEnabled = true;
 }
 
 void CPU::Serialize(Serializer & s) {

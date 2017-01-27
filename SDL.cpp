@@ -92,6 +92,9 @@ void SDL::HandleEvents() {
       if (event.key.keysym.scancode == SDL_SCANCODE_F9) {
         gb->GetDebugger()->ToggleActive();
       }
+      if (event.key.keysym.scancode == SDL_SCANCODE_F11) {
+        gb->Reset();
+      }
     }
   }
 }

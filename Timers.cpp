@@ -4,9 +4,7 @@
 #include "Serializer.h"
 
 Timers::Timers(CPU &Cpu, Memory &MMU) : Cpu(Cpu), MMU(MMU) {
-  SetUpdateFrequency();
-  currentCycles = 0;
-  currentCyclesDR = 0;
+  Reset();
 }
 
 bool Timers::TimerEnabled() {
@@ -21,6 +19,12 @@ void Timers::SetUpdateFrequency() {
   case 2: cyclesUntilUpdate = 64; break;
   case 3: cyclesUntilUpdate = 256; break;
   }
+}
+
+void Timers::Reset() {
+  SetUpdateFrequency();
+  currentCycles = 0;
+  currentCyclesDR = 0;
 }
 
 void Timers::Serialize(Serializer & s) {
