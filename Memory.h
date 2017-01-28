@@ -35,7 +35,6 @@ private:
 
   Controller &controller;
 
-  void LoadCartridge(const char* fname);
   void ToggleRAMEnabled(const word& address, const byte& val);
   void ChangeBanks(const word& address, const byte& val);
 
@@ -47,6 +46,8 @@ public:
 
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);
+
+  void LoadROM(const char* fname);
 
   byte ReadByte(const word& address);
   word ReadWord(const word& address);

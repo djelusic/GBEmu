@@ -35,7 +35,7 @@ private:
 
 public:
 
-  GB(const char* rom_fpath);
+  GB(const char* rom_fpath = nullptr);
   void AdvanceFrame();
   void SetCGBMode(bool val);
   bool CGBModeEnabled();
@@ -51,8 +51,8 @@ public:
   void Serialize(Serializer & s);
   void Deserialize(Serializer & s);
 
-  void SaveState();
-  void LoadState();
+  byte * SaveState(bool save_to_disk = true);
+  void LoadState(const byte * data = nullptr);
 
   void DebugLog(std::string s);
 
@@ -61,5 +61,6 @@ public:
   Memory* GetMMU();
   Controller* GetInput();
   Debugger* GetDebugger();
+  Serializer* GetSerializer();
 
 };

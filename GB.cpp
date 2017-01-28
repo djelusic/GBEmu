@@ -15,10 +15,7 @@ GB::GB(const char* rom_fpath) :
   disassembler(this, MMU, Cpu),
   debugger(Cpu, disassembler),
   debugLogCallback(nullptr) {
-  std::string path(rom_fpath);
-  auto basename = path.substr(path.find_last_of("/\\") + 1);
-  auto pos = basename.find_last_of(".");
-  ROMName = basename.substr(0, pos);
+  LoadROM(rom_fpath);
 }
 
 void GB::AdvanceFrame() {
@@ -59,20 +56,25 @@ const char * GB::GetROMPath() {
 }
 
 void GB::Reset() {
+  doubleSpeed = false;
+  CGBMode = false;
+  currentCycles = 0;
   controller.Reset();
   MMU.Reset();
   Cpu.Reset();
   timers.Reset();
   graphics.Reset();
-  doubleSpeed = false;
 }
 
-void GB::LoadROM(const char * rom_fpath) {
-  this->rom_fpath = rom_fpath;
-  std::string path(rom_fpath);
-  auto basename = path.substr(path.find_last_of("/\\") + 1);
-  auto pos = basename.find_last_of(".");
-  ROMName = basename.substr(0, pos);
+void GB::LoadROM(const char * _rom_fpath) {
+  if (_rom_fpath != nullptr) {
+    rom_fpath = _rom_fpath;
+    std::string path(rom_fpath);
+    auto basename = path.substr(path.find_last_of("/\\") + 1);
+    auto pos = basename.find_last_of(".");
+    ROMName = basename.substr(0, pos);
+    MMU.LoadROM(rom_fpath);
+  }
   Reset();
 }
 
@@ -88,19 +90,27 @@ void GB::Deserialize(Serializer & s) {
   doubleSpeed = s.Deserialize<bool>();
 }
 
-void GB::SaveState() {
+byte * GB::SaveState(bool save_to_disk) {
   controller.Serialize(serializer);
   MMU.Serialize(serializer);
   Cpu.Serialize(serializer);
   timers.Serialize(serializer);
   graphics.Serialize(serializer);
   Serialize(serializer);
-  serializer.SaveFile(("states/" + ROMName + ".state").c_str());
+  if (save_to_disk) {
+    serializer.SaveFile(("states/" + ROMName + ".state").c_str());
+  }
   serializer.Reset();
+  return serializer.GetData();
 }
 
-void GB::LoadState() {
-  serializer.LoadFile(("states/" + ROMName + ".state").c_str());
+void GB::LoadState(const byte * data) {
+  if (data != nullptr) {
+    serializer.SetData(data);
+  }
+  else {
+    serializer.LoadFile(("states/" + ROMName + ".state").c_str());
+  }
   controller.Deserialize(serializer);
   MMU.Deserialize(serializer);
   Cpu.Deserialize(serializer);
@@ -135,4 +145,8 @@ Controller * GB::GetInput() {
 
 Debugger * GB::GetDebugger() {
   return &debugger;
+}
+
+Serializer * GB::GetSerializer() {
+  return &serializer;
 }

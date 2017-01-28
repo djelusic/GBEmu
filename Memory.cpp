@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 
-void Memory::LoadCartridge(const char* fpath) {
+void Memory::LoadROM(const char* fpath) {
   std::ifstream fin(fpath, std::ios::in | std::ios::binary);
   fin.seekg(0, std::ios::end);
   int length = fin.tellg();
@@ -98,8 +98,6 @@ Memory::~Memory() {
 
 void Memory::Reset() {
   memset(m_MMU, 0, 0x10000);
-  memset(m_Cartridge, 0, 0x800000);
-  memset(m_CartridgeRAM, 0, 0x20000);
   memset(m_VRAM, 0, 0x4000);
   memset(m_WRAM, 0, 0x8000);
   memset(m_PaletteData, 0, 0x80);
@@ -150,8 +148,6 @@ void Memory::Reset() {
   ramEnabled = false;
   ramBankingMode = false;
   MBCMode = 0;
-
-  LoadCartridge(gb->GetROMPath());
 
   byte MBCVal = m_Cartridge[0x147];
   if (MBCVal > 0 && MBCVal <= 3) {

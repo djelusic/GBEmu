@@ -58,5 +58,7 @@ public:
 
   void SaveFile(const char * fpath);
   void LoadFile(const char * fpath);
+  byte * GetData();
+  void SetData(const byte * data);
   void Reset();
 };

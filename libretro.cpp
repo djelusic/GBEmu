@@ -1,7 +1,8 @@
 #include "libretro.h"
 #include "GB.h"
 
-GB *gb;
+GB * gb;
+byte * display_adjusted;
 retro_environment_t env_cb;
 retro_video_refresh_t video_cb;
 retro_audio_sample_t audio_sample_cb;
@@ -11,8 +12,6 @@ retro_input_state_t input_state_cb;
 
 RETRO_API void retro_set_environment(retro_environment_t cb) {
   env_cb = cb;
-  bool no_rom = true;
-  cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t cb) {
@@ -36,10 +35,13 @@ RETRO_API void retro_set_input_state(retro_input_state_t cb) {
 }
 
 RETRO_API void retro_init(void) {
-  gb = new GB("zelda.gb");
+  gb = new GB();
+  display_adjusted = new byte[144 * 160 * 4];
 }
 
 RETRO_API void retro_deinit(void) {
+  delete gb;
+  delete[] display_adjusted;
 }
 
 RETRO_API unsigned retro_api_version(void) {
@@ -71,32 +73,40 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device) 
 }
 
 RETRO_API void retro_reset(void) {
+  gb->Reset();
 }
 
 RETRO_API void retro_run(void) {
   gb->AdvanceFrame();
-  video_cb(gb->GetGraphics()->GetDisplayPixels(), 160, 144, 0);
+  byte * display = gb->GetGraphics()->GetDisplayPixels();
+  for (int i = 0; i < 144 * 160 * 4; i += 4) {
+    display_adjusted[i] = display[i + 1];
+    display_adjusted[i + 1] = display[i + 2];
+    display_adjusted[i + 2] = display[i + 3];
+  }
+  video_cb(display_adjusted, 160, 144, 160 * 4);
 }
 
 RETRO_API size_t retro_serialize_size(void) {
-  return 0;
+  return 0x20000;
 }
 
 RETRO_API bool retro_serialize(void * data, size_t size) {
-  return false;
+  memcpy((byte*)data, gb->SaveState(false), size);
+  return true;
 }
 
 RETRO_API bool retro_unserialize(const void * data, size_t size) {
-  return false;
+  gb->LoadState((byte*)data);
+  return true;
 }
 
-RETRO_API void retro_cheat_reset(void) {
-}
+RETRO_API void retro_cheat_reset(void) {}
 
-RETRO_API void retro_cheat_set(unsigned index, bool enabled, const char * code) {
-}
+RETRO_API void retro_cheat_set(unsigned index, bool enabled, const char * code) {}
 
 RETRO_API bool retro_load_game(const retro_game_info * game) {
+  gb->LoadROM(game->path);
   return true;
 }
 
@@ -105,6 +115,7 @@ RETRO_API bool retro_load_game_special(unsigned game_type, const retro_game_info
 }
 
 RETRO_API void retro_unload_game(void) {
+  gb->LoadROM(nullptr);
 }
 
 RETRO_API unsigned retro_get_region(void) {

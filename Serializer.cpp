@@ -28,6 +28,14 @@ void Serializer::LoadFile(const char * fpath) {
   }
 }
 
+byte * Serializer::GetData() {
+  return data;
+}
+
+void Serializer::SetData(const byte * data) {
+  memcpy(this->data, data, maxLength);
+}
+
 void Serializer::Reset() {
   pos = 0;
 }
