@@ -10,7 +10,8 @@
 #include <thread>
 
 SDL::SDL(GB *gb) :
-  gb(gb) {
+  gb(gb),
+  quit(false) {
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("GBEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160 * 3, 144 * 3, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
